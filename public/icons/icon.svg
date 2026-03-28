@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <!-- Fundo azul escuro arredondado -->
+  <rect width="512" height="512" rx="96" fill="#1e3a8a"/>
+  <!-- Carroceria do caminhão -->
+  <rect x="60" y="180" width="260" height="160" rx="18" fill="#ffffff"/>
+  <!-- Cabine -->
+  <rect x="320" y="220" width="130" height="120" rx="14" fill="#ffffff"/>
+  <!-- Janela da cabine -->
+  <rect x="332" y="232" width="106" height="60" rx="8" fill="#bfdbfe"/>
+  <!-- Chassi / barra inferior -->
+  <rect x="60" y="310" width="390" height="22" rx="4" fill="#1d4ed8"/>
+  <!-- Roda traseira -->
+  <circle cx="155" cy="356" r="42" fill="#1e3a8a" stroke="#ffffff" stroke-width="8"/>
+  <circle cx="155" cy="356" r="18" fill="#ffffff"/>
+  <!-- Roda dianteira -->
+  <circle cx="375" cy="356" r="42" fill="#1e3a8a" stroke="#ffffff" stroke-width="8"/>
+  <circle cx="375" cy="356" r="18" fill="#ffffff"/>
+  <!-- Check-mark no baú -->
+  <polyline points="110,258 160,308 270,210" fill="none" stroke="#1d6fdf" stroke-width="22" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

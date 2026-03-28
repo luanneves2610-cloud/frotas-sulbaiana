@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <!-- Fundo cheio (maskable: safe zone é ~80% central) -->
+  <rect width="512" height="512" fill="#1e3a8a"/>
+  <!-- Carroceria do caminhão (centralizada na safe zone) -->
+  <rect x="80" y="195" width="240" height="145" rx="16" fill="#ffffff"/>
+  <!-- Cabine -->
+  <rect x="320" y="230" width="115" height="110" rx="12" fill="#ffffff"/>
+  <!-- Janela da cabine -->
+  <rect x="332" y="242" width="91" height="54" rx="7" fill="#bfdbfe"/>
+  <!-- Chassi -->
+  <rect x="80" y="315" width="355" height="18" rx="4" fill="#1d4ed8"/>
+  <!-- Roda traseira -->
+  <circle cx="165" cy="355" r="38" fill="#1e3a8a" stroke="#ffffff" stroke-width="7"/>
+  <circle cx="165" cy="355" r="16" fill="#ffffff"/>
+  <!-- Roda dianteira -->
+  <circle cx="365" cy="355" r="38" fill="#1e3a8a" stroke="#ffffff" stroke-width="7"/>
+  <circle cx="365" cy="355" r="16" fill="#ffffff"/>
+  <!-- Check-mark -->
+  <polyline points="122,265 168,311 268,218" fill="none" stroke="#1d6fdf" stroke-width="20" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

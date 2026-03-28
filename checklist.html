@@ -1,0 +1,760 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Check-list — Sulbaiana</title>
+<!-- PWA -->
+<link rel="manifest" href="/manifest.json">
+<meta name="theme-color" content="#1d6fdf">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Check-list">
+<link rel="apple-touch-icon" href="/icons/icon.svg">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+:root{
+  --blue:#1d6fdf;--blue-dark:#1e3a8a;--blue-light:#eff6ff;
+  --green:#16a34a;--green-light:#dcfce7;
+  --red:#dc2626;--red-light:#fee2e2;
+  --yellow:#d97706;--yellow-light:#fef3c7;
+  --gray:#64748b;--gray-light:#f1f5f9;
+  --border:#e2e8f0;--white:#ffffff;
+  --text:#0f172a;--text2:#475569;--text3:#94a3b8;
+}
+body{font-family:'Inter',-apple-system,system-ui,sans-serif;background:#f0f4f8;color:var(--text);min-height:100vh;padding-bottom:90px}
+.hdr{background:linear-gradient(135deg,var(--blue),var(--blue-dark));color:#fff;padding:14px 18px;position:sticky;top:0;z-index:100;box-shadow:0 2px 12px rgba(0,0,0,.2)}
+.hdr-row{display:flex;align-items:center;gap:10px}
+.hdr-back{background:rgba(255,255,255,.15);border:none;color:#fff;width:34px;height:34px;border-radius:8px;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.hdr-info{flex:1}
+.hdr-title{font-size:15px;font-weight:700}
+.hdr-sub{font-size:11px;opacity:.75;margin-top:1px}
+.hdr-step{background:rgba(255,255,255,.2);border-radius:20px;padding:3px 10px;font-size:11px;font-weight:600;white-space:nowrap}
+.confirm-screen{padding:16px}
+.confirm-hero{background:var(--white);border-radius:16px;padding:22px 18px;margin-bottom:14px;box-shadow:0 2px 8px rgba(0,0,0,.06);text-align:center}
+.confirm-ico{width:60px;height:60px;background:var(--blue-light);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 12px;font-size:26px}
+.confirm-title{font-size:17px;font-weight:700;margin-bottom:5px}
+.confirm-sub{font-size:13px;color:var(--text2);line-height:1.5}
+.v-banner{background:var(--blue-dark);border-radius:14px;padding:14px 16px;margin-bottom:14px;display:flex;align-items:center;gap:12px}
+.v-placa-big{background:#fff;color:var(--blue-dark);font-size:20px;font-weight:800;padding:7px 12px;border-radius:9px;font-family:monospace;letter-spacing:2px;flex-shrink:0}
+.v-banner-info{color:#fff}
+.v-banner-info strong{display:block;font-size:14px}
+.v-banner-info span{font-size:11px;opacity:.7}
+.form-card{background:var(--white);border-radius:14px;padding:16px;box-shadow:0 2px 8px rgba(0,0,0,.06)}
+.form-card-title{font-size:12px;font-weight:700;color:var(--text2);margin-bottom:14px;display:flex;align-items:center;gap:6px}
+.km-atual{background:var(--blue-light);border-radius:8px;padding:9px 12px;display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.km-atual span{font-size:11px;color:var(--blue)}
+.km-atual strong{font-size:14px;color:var(--blue-dark);font-family:monospace}
+.field{margin-bottom:14px}
+.field:last-child{margin-bottom:0}
+.field label{display:block;font-size:12px;font-weight:600;color:var(--text2);margin-bottom:6px}
+.field input{width:100%;padding:12px 14px;border:2px solid var(--border);border-radius:10px;font-size:16px;color:var(--text);background:var(--gray-light);font-family:inherit;transition:border-color .15s}
+.field input:focus{outline:none;border-color:var(--blue);background:#fff;box-shadow:0 0 0 3px rgba(29,111,223,.1)}
+.field input.err{border-color:var(--red);background:#fff9f9}
+.field-hint{font-size:11px;color:var(--text3);margin-top:4px}
+.field-error{font-size:12px;color:var(--red);font-weight:600;margin-top:5px;display:none}
+.progress-wrap{background:var(--white);border-bottom:1px solid var(--border);padding:10px 16px}
+.progress-info{display:flex;justify-content:space-between;font-size:12px;color:var(--text2);margin-bottom:6px}
+.progress-bar{height:5px;background:var(--border);border-radius:3px;overflow:hidden}
+.progress-fill{height:100%;background:var(--blue);border-radius:3px;transition:width .4s}
+.v-card{margin:14px 14px 0;background:var(--blue-dark);border-radius:12px;padding:12px 14px;display:flex;align-items:center;gap:10px}
+.v-placa{background:#fff;color:var(--blue-dark);font-size:17px;font-weight:800;padding:6px 11px;border-radius:8px;font-family:monospace;letter-spacing:2px;flex-shrink:0}
+.v-info{flex:1}
+.v-info strong{display:block;font-size:13px;font-weight:700;color:#fff}
+.v-info span{font-size:10px;color:rgba(255,255,255,.65)}
+.v-km-badge{background:rgba(255,255,255,.15);border-radius:6px;padding:2px 8px;font-size:10px;color:#fff;font-weight:600;margin-top:3px;display:inline-block}
+.secao{margin:12px 14px 0}
+.secao-title{font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:1.2px;padding:8px 0 6px;border-bottom:1px solid var(--border);margin-bottom:8px}
+.item{background:var(--white);border-radius:12px;margin-bottom:8px;padding:14px;border:2px solid transparent;transition:border-color .2s}
+.item.ok{border-color:#22c55e}
+.item.nao{border-color:var(--red)}
+.item.na{border-color:var(--text3)}
+.item-num{font-size:9px;font-weight:700;color:var(--text3);margin-bottom:3px}
+.item-desc{font-size:14px;font-weight:500;line-height:1.4;margin-bottom:10px}
+.item-opt{font-size:10px;color:var(--text3);font-weight:400}
+.btns{display:grid;grid-template-columns:1fr 1fr 1fr;gap:7px}
+.btn-op{padding:10px 4px;border:2px solid var(--border);border-radius:10px;background:var(--gray-light);font-size:12px;font-weight:700;cursor:pointer;transition:all .15s;text-align:center;line-height:1.4}
+.btn-op:active{transform:scale(.97)}
+.btn-op.sel-ok{background:var(--green-light);border-color:#22c55e;color:var(--green)}
+.btn-op.sel-nao{background:var(--red-light);border-color:var(--red);color:var(--red)}
+.btn-op.sel-na{background:var(--gray-light);border-color:var(--text3);color:var(--gray)}
+.foto-section{margin-top:10px;padding-top:10px;border-top:2px dashed rgba(220,38,38,.25)}
+.foto-req{font-size:11px;color:var(--red);font-weight:600;margin-bottom:8px;display:flex;align-items:center;gap:5px}
+.foto-grid{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px}
+.foto-thumb{width:64px;height:64px;border-radius:8px;object-fit:cover;border:2px solid var(--border)}
+.btn-camera{display:flex;align-items:center;justify-content:center;gap:7px;padding:10px 14px;background:var(--white);border:2px dashed var(--text3);border-radius:10px;font-size:13px;color:var(--text2);cursor:pointer;font-weight:500;width:100%}
+.btn-camera:active{background:var(--gray-light)}
+.fotos-section{margin:14px}
+.fotos-card{background:var(--white);border-radius:14px;padding:14px;margin-bottom:12px}
+.fotos-card-title{font-size:14px;font-weight:700;margin-bottom:3px}
+.fotos-card-sub{font-size:12px;color:var(--text2);margin-bottom:12px}
+.foto-grid-2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.foto-slot{border:2px dashed var(--border);border-radius:12px;padding:18px 10px;text-align:center;cursor:pointer;transition:all .2s;background:var(--white)}
+.foto-slot.done{border-color:#22c55e;background:#f0fdf4;border-style:solid}
+.foto-slot-ico{font-size:26px;margin-bottom:5px}
+.foto-slot-label{font-size:12px;font-weight:600;color:var(--text)}
+.foto-slot-sub{font-size:10px;color:var(--text3);margin-top:2px}
+.foto-slot-check{font-size:10px;color:var(--green);font-weight:700;margin-top:5px}
+.foto-slot img{width:100%;border-radius:8px;object-fit:cover;max-height:110px}
+.score-screen{padding:16px}
+.score-hero{background:var(--white);border-radius:16px;padding:24px 18px;text-align:center;margin-bottom:12px;box-shadow:0 4px 16px rgba(0,0,0,.08)}
+.score-num{font-size:60px;font-weight:800;line-height:1}
+.score-badge{display:inline-block;font-size:13px;font-weight:700;padding:5px 18px;border-radius:20px;margin-top:8px}
+.score-stats{display:flex;justify-content:center;gap:20px;margin-top:14px}
+.score-stat{text-align:center}
+.score-stat span{display:block;font-size:20px;font-weight:700}
+.score-stat small{font-size:10px;color:var(--text2)}
+.nao-card{background:var(--red-light);border-radius:12px;padding:12px;margin-bottom:12px}
+.nao-card-title{font-size:12px;font-weight:700;color:var(--red);margin-bottom:6px}
+.nao-item{font-size:12px;color:#7f1d1d;padding:3px 0;border-bottom:1px solid rgba(220,38,38,.1)}
+.ok-card{background:var(--green-light);border-radius:12px;padding:14px;text-align:center}
+.ok-title{font-size:14px;font-weight:700;color:var(--green);margin-bottom:3px}
+.ok-sub{font-size:12px;color:#166534}
+.bottom-bar{position:fixed;bottom:0;left:0;right:0;background:rgba(255,255,255,.97);border-top:1px solid var(--border);padding:12px 16px;z-index:200;backdrop-filter:blur(8px)}
+.btn-primary{width:100%;padding:15px;background:var(--blue);color:#fff;border:none;border-radius:12px;font-size:15px;font-weight:700;cursor:pointer;transition:all .2s;font-family:inherit}
+.btn-primary:disabled{background:var(--text3);cursor:not-allowed}
+.btn-primary:active:not(:disabled){transform:scale(.99);background:var(--blue-dark)}
+.loading{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;gap:14px}
+.spinner{width:44px;height:44px;border:4px solid var(--border);border-top-color:var(--blue);border-radius:50%;animation:spin 1s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.estado-wrap{display:flex;align-items:center;justify-content:center;min-height:100vh;padding:20px}
+.estado-card{background:var(--white);border-radius:16px;padding:28px 24px;text-align:center;max-width:360px;width:100%}
+input[type=file]{display:none}
+/* PWA install banner */
+.install-banner{background:linear-gradient(135deg,#1e3a8a,#1d6fdf);color:#fff;padding:12px 16px;display:flex;align-items:center;gap:12px;border-radius:12px;margin-bottom:14px}
+.install-banner-ico{font-size:28px;flex-shrink:0}
+.install-banner-txt{flex:1}
+.install-banner-txt strong{display:block;font-size:13px;font-weight:700}
+.install-banner-txt span{font-size:11px;opacity:.8}
+.install-banner button{background:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.4);color:#fff;padding:8px 14px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;font-family:inherit}
+.install-banner button:active{background:rgba(255,255,255,.35)}
+/* Offline indicator */
+.offline-bar{background:#b45309;color:#fff;text-align:center;padding:8px 16px;font-size:12px;font-weight:600;position:sticky;top:0;z-index:200;display:none}
+.offline-bar.visible{display:block}
+/* Tela de pendente offline */
+.pendente-screen{padding:16px}
+.pendente-card{background:#fff;border-radius:16px;padding:22px 18px;text-align:center;box-shadow:0 4px 16px rgba(0,0,0,.08);margin-bottom:14px}
+.sync-btn{width:100%;padding:15px;background:#16a34a;color:#fff;border:none;border-radius:12px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;margin-top:10px}
+.sync-btn:disabled{background:#94a3b8;cursor:not-allowed}
+</style>
+</head>
+<body>
+<div class="offline-bar" id="offline-bar">📡 Sem conexão — as respostas serão salvas localmente e enviadas quando voltar a internet</div>
+<div id="app"></div>
+<script>
+const SB_URL='https://kjblegripbhbrttejiyv.supabase.co';
+const SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtqYmxlZ3JpcGJoYnJ0dGVqaXl2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI2MzIyMTQsImV4cCI6MjA4ODIwODIxNH0.OdyBIFPqSd9NyXwsIAQVhVl2vYln9A_wBtmcJ84ty5c';
+const H={'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Content-Type':'application/json'};
+async function sbGet(t,q){const r=await fetch(SB_URL+'/rest/v1/'+t+'?'+(q||''),{headers:H});if(!r.ok)throw new Error(await r.text());return r.json();}
+async function sbPost(t,d){const r=await fetch(SB_URL+'/rest/v1/'+t,{method:'POST',headers:{...H,'Prefer':'return=representation'},body:JSON.stringify(d)});if(!r.ok)throw new Error(await r.text());return r.json();}
+async function sbPatch(t,id,d){const r=await fetch(SB_URL+'/rest/v1/'+t+'?id=eq.'+id,{method:'PATCH',headers:{...H,'Prefer':'return=representation'},body:JSON.stringify(d)});if(!r.ok)throw new Error(await r.text());return r.json();}
+
+let EXEC=null,VEICULO=null,ITENS=[],RESPOSTAS={},FOTOS_ITEM={};
+let FOTOS_GERAIS={frente:null,traseira:null,lateral_esq:null,lateral_dir:null};
+let KM_CONFIRMADO=null;
+
+function getToken(){return new URLSearchParams(window.location.search).get('t');}
+function render(h){document.getElementById('app').innerHTML=h;document.querySelectorAll('.bottom-bar').forEach(b=>b.remove());}
+
+async function init(){
+  render('<div class="loading"><div class="spinner"></div><div style="color:#64748b;font-size:13px">Carregando...</div></div>');
+  try{
+    const token=getToken();
+    if(!token)return renderEstado('Link inválido','Este link não contém um token válido.','warning');
+    const execs=await sbGet('checklist_execucoes','token=eq.'+token+'&select=*');
+    if(!execs.length)return renderEstado('Não encontrado','Este link é inválido ou foi removido.','warning');
+    EXEC=execs[0];
+    if(EXEC.status==='concluido')return renderEstado('Já concluído','Este check-list já foi preenchido com sucesso. Obrigado!','ok');
+    if(EXEC.status==='expirado'||(EXEC.expira_em&&new Date(EXEC.expira_em)<new Date())){
+      if(EXEC.status!=='expirado')await sbPatch('checklist_execucoes',EXEC.id,{status:'expirado'});
+      return renderEstado('Link expirado','Este link expirou. Solicite um novo ao responsável.','warning');
+    }
+    const [veics,itens]=await Promise.all([
+      sbGet('veiculos','id=eq.'+EXEC.veiculo_id+'&select=*,contratos(nome_contrato),localidades(nome_localidade)'),
+      sbGet('checklist_itens','ativo=eq.true&order=ordem.asc&select=*')
+    ]);
+    VEICULO=veics[0];ITENS=itens;
+    renderConfirmar();
+  }catch(e){renderEstado('Erro','Não foi possível carregar. Verifique sua conexão.','warning');}
+}
+
+/* ═══ TELA 1: CONFIRMAÇÃO ═══ */
+function renderConfirmar(){
+  const kmSys=(EXEC.km_veiculo||VEICULO?.km_atual||0).toLocaleString('pt-BR');
+  render(`
+    <div class="hdr">
+      <div class="hdr-row">
+        <div class="hdr-info"><div class="hdr-title">Confirmar Veículo</div><div class="hdr-sub">Passo 1 de 3</div></div>
+        <div class="hdr-step">1/3</div>
+      </div>
+    </div>
+    <div class="confirm-screen">
+      <!-- Banner instalar PWA (só aparece se o browser suportar e não estiver instalado) -->
+      <div class="install-banner" id="install-banner" style="display:none">
+        <div class="install-banner-ico">📲</div>
+        <div class="install-banner-txt">
+          <strong>Instalar Check-list</strong>
+          <span>Adicione à tela inicial para usar sem internet</span>
+        </div>
+        <button onclick="instalarApp()">Instalar</button>
+      </div>
+      <div class="confirm-hero">
+        <div class="confirm-ico">🚗</div>
+        <div class="confirm-title">Confirme os dados</div>
+        <div class="confirm-sub">Verifique a placa e informe o KM atual antes de iniciar o check-list.</div>
+      </div>
+      <div class="v-banner">
+        <div class="v-placa-big">${VEICULO?.placa||'—'}</div>
+        <div class="v-banner-info">
+          <strong>${VEICULO?.modelo||'—'}</strong>
+          <span>${VEICULO?.contratos?.nome_contrato||''}</span>
+        </div>
+      </div>
+      <div class="form-card">
+        <div class="form-card-title">🔢 Informe o KM atual</div>
+        <div class="km-atual">
+          <span>KM no sistema</span>
+          <strong>${kmSys} km</strong>
+        </div>
+        <div class="field">
+          <label>KM atual (odômetro) *</label>
+          <input type="number" id="inp-km" inputmode="numeric" placeholder="Ex: 48500"
+            value="${EXEC.km_veiculo||VEICULO?.km_atual||''}"
+            oninput="checkConfirm()">
+          <div class="field-hint">Valor exato no painel do veículo</div>
+        </div>
+        <div class="field">
+          <label>Confirme a placa *</label>
+          <input type="text" id="inp-placa"
+            style="text-transform:uppercase;font-family:monospace;font-size:18px;letter-spacing:2px"
+            maxlength="8" placeholder="Ex: PJP8258"
+            oninput="this.value=this.value.toUpperCase();checkConfirm()">
+          <div class="field-hint">Digite a placa para confirmar que está no veículo correto</div>
+          <div class="field-error" id="placa-erro">❌ Placa incorreta. Verifique e tente novamente.</div>
+        </div>
+      </div>
+    </div>
+  `);
+  addBar('<button class="btn-primary" id="btn-conf" onclick="confirmarVeiculo()" disabled>Confirmar e Iniciar →</button>');
+}
+
+function checkConfirm(){
+  const km=document.getElementById('inp-km')?.value;
+  const pl=document.getElementById('inp-placa')?.value?.trim();
+  const btn=document.getElementById('btn-conf');
+  if(btn) btn.disabled=!km||parseInt(km)<=0||!pl||pl.length<6;
+}
+
+async function confirmarVeiculo(){
+  const km=parseInt(document.getElementById('inp-km').value);
+  const plDigit=(document.getElementById('inp-placa').value||'').trim().toUpperCase().replace(/[\s-]/g,'');
+  const plReal=(VEICULO?.placa||'').toUpperCase().replace(/[\s-]/g,'');
+  const erroEl=document.getElementById('placa-erro');
+  const inpEl=document.getElementById('inp-placa');
+  if(plDigit!==plReal){
+    erroEl.style.display='block';
+    inpEl.classList.add('err');
+    inpEl.focus();
+    return;
+  }
+  if(!km||km<=0){alert('Informe um KM válido!');return;}
+  KM_CONFIRMADO=km;
+  try{
+    await sbPatch('checklist_execucoes',EXEC.id,{status:'em_andamento',inicio_em:new Date().toISOString(),km_veiculo:km});
+    if(km>(VEICULO?.km_atual||0)){
+      await fetch(SB_URL+'/rest/v1/veiculos?id=eq.'+VEICULO.id,{method:'PATCH',headers:{...H,'Prefer':'return=representation'},body:JSON.stringify({km_atual:km})});
+      VEICULO.km_atual=km;
+    }
+    EXEC.status='em_andamento';EXEC.km_veiculo=km;
+  }catch(e){}
+  renderChecklist();
+}
+
+/* ═══ TELA 2: CHECK-LIST ═══ */
+function getCats(){
+  const c={};ITENS.forEach(i=>{if(!c[i.categoria])c[i.categoria]=[];c[i.categoria].push(i);});return c;
+}
+
+function renderChecklist(){
+  const cats=getCats();
+  const total=ITENS.length;
+  const resp=Object.keys(RESPOSTAS).length;
+  const pct=total?Math.round(resp/total*100):0;
+  let html=`
+    <div class="hdr">
+      <div class="hdr-row">
+        <button class="hdr-back" onclick="renderConfirmar()">←</button>
+        <div class="hdr-info"><div class="hdr-title">Check-list</div><div class="hdr-sub">${EXEC.tipo==='movimentacao'?'Movimentação: '+EXEC.tipo_movimentacao:'Auditoria Periódica'}</div></div>
+        <div class="hdr-step">2/3</div>
+      </div>
+    </div>
+    <div class="progress-wrap">
+      <div class="progress-info"><span>${resp}/${total} respondidos</span><span style="font-weight:600;color:var(--blue)">${pct}%</span></div>
+      <div class="progress-bar"><div class="progress-fill" style="width:${pct}%"></div></div>
+    </div>
+    <div class="v-card">
+      <div class="v-placa">${VEICULO?.placa||'—'}</div>
+      <div class="v-info">
+        <strong>${VEICULO?.modelo||'—'}</strong>
+        <span>${VEICULO?.contratos?.nome_contrato||''}</span>
+        <div class="v-km-badge">KM: ${(KM_CONFIRMADO||0).toLocaleString('pt-BR')}</div>
+      </div>
+    </div>
+  `;
+  let idx=0;
+  Object.entries(cats).forEach(([cat,itens])=>{
+    html+='<div class="secao"><div class="secao-title">'+cat+'</div>';
+    itens.forEach(item=>{
+      idx++;
+      const r=RESPOSTAS[item.id]||null;
+      const cls=r==='OK'?'ok':r==='NÃO'?'nao':r==='N/A'?'na':'';
+      const fotos=FOTOS_ITEM[item.id]||[];
+      html+=`<div class="item ${cls}" id="item-${item.id}">
+        <div class="item-num">${String(idx).padStart(2,'0')}</div>
+        <div class="item-desc">${item.descricao}${!item.obrigatorio?'<span class="item-opt"> (opcional)</span>':''}</div>
+        <div class="btns">
+          <button class="btn-op ${r==='OK'?'sel-ok':''}" onclick="responder(${item.id},'OK')">✅<br>OK</button>
+          <button class="btn-op ${r==='NÃO'?'sel-nao':''}" onclick="responder(${item.id},'NÃO')">❌<br>NÃO</button>
+          <button class="btn-op ${r==='N/A'?'sel-na':''}" onclick="responder(${item.id},'N/A')">➖<br>N/A</button>
+        </div>
+        ${r==='NÃO'?`<div class="foto-section">
+          <div class="foto-req">📸 Foto obrigatória da não conformidade</div>
+          <div class="foto-grid" id="fotos-${item.id}">${fotos.map(f=>'<img class="foto-thumb" src="'+f.data+'">').join('')}</div>
+          <input type="file" accept="image/*" capture="environment" id="finput-${item.id}" onchange="capturaFotoItem(${item.id},this)">
+          <button class="btn-camera" onclick="document.getElementById('finput-${item.id}').click()">📷 ${fotos.length?'Adicionar mais':'Tirar foto (obrigatório)'}</button>
+        </div>`:''}
+      </div>`;
+    });
+    html+='</div>';
+  });
+  render(html);
+  addBar('<button class="btn-primary" id="btn-av" onclick="avancarFotos()">📷 Fotos do Veículo →</button>');
+  atualizarBotao();
+}
+
+function responder(id,r){
+  RESPOSTAS[id]=r;if(r!=='NÃO')delete FOTOS_ITEM[id];
+  renderChecklist();
+  setTimeout(()=>{const el=document.getElementById('item-'+id);if(el)el.scrollIntoView({behavior:'smooth',block:'center'});},80);
+  if(r==='NÃO')setTimeout(()=>{const inp=document.getElementById('finput-'+id);if(inp)inp.click();},350);
+}
+
+function capturaFotoItem(id,input){
+  const f=input.files[0];if(!f)return;
+  comprimirImagem(f,data=>{
+    if(!FOTOS_ITEM[id])FOTOS_ITEM[id]=[];
+    FOTOS_ITEM[id].push({data,nome:f.name});
+    const g=document.getElementById('fotos-'+id);
+    if(g){const img=document.createElement('img');img.className='foto-thumb';img.src=data;g.appendChild(img);}
+  });
+}
+
+function atualizarBotao(){
+  const btn=document.getElementById('btn-av');if(!btn)return;
+  const vazios=ITENS.filter(i=>!RESPOSTAS[i.id]);
+  const semFoto=ITENS.filter(i=>RESPOSTAS[i.id]==='NÃO'&&(!FOTOS_ITEM[i.id]||!FOTOS_ITEM[i.id].length));
+  if(vazios.length){btn.disabled=true;btn.textContent='⚠️ '+vazios.length+' item(s) sem resposta';return;}
+  if(semFoto.length){btn.disabled=true;btn.textContent='📸 '+semFoto.length+' NÃO sem foto';return;}
+  btn.disabled=false;btn.textContent='📷 Avançar para Fotos →';
+}
+
+function avancarFotos(){renderFotosGerais();}
+
+/* ═══ TELA 3: FOTOS ═══ */
+function renderFotosGerais(){
+  const slots=[
+    {id:'frente',label:'Frente',ico:'🚘',sub:'Parte frontal'},
+    {id:'traseira',label:'Traseira',ico:'🚗',sub:'Parte traseira'},
+    {id:'lateral_esq',label:'Lateral Esq.',ico:'◀',sub:'Lado esquerdo'},
+    {id:'lateral_dir',label:'Lateral Dir.',ico:'▶',sub:'Lado direito'},
+  ];
+  const done=slots.filter(s=>FOTOS_GERAIS[s.id]).length;
+  let html=`
+    <div class="hdr">
+      <div class="hdr-row">
+        <button class="hdr-back" onclick="renderChecklist()">←</button>
+        <div class="hdr-info"><div class="hdr-title">Fotos do Veículo</div><div class="hdr-sub">${done}/4 fotos obrigatórias</div></div>
+        <div class="hdr-step">3/3</div>
+      </div>
+    </div>
+    <div class="fotos-section">
+      <div class="fotos-card">
+        <div class="fotos-card-title">📸 Registro fotográfico</div>
+        <div class="fotos-card-sub">Fotografe as 4 posições. Todas obrigatórias para finalizar.</div>
+        <div class="foto-grid-2">
+  `;
+  slots.forEach(s=>{
+    const foto=FOTOS_GERAIS[s.id];
+    html+=`<div class="foto-slot ${foto?'done':''}" onclick="document.getElementById('fslot-${s.id}').click()">
+      <input type="file" id="fslot-${s.id}" accept="image/*" capture="environment" onchange="capturaFotoGeral('${s.id}',this)">
+      ${foto?`<img src="${foto.data}"><div class="foto-slot-check">✅ ${s.label}</div>`:`<div class="foto-slot-ico">${s.ico}</div><div class="foto-slot-label">${s.label}</div><div class="foto-slot-sub">${s.sub}</div>`}
+    </div>`;
+  });
+  const extras=FOTOS_GERAIS.extras||[];
+  html+=`</div></div>
+    <div class="fotos-card">
+      <div class="fotos-card-title" style="font-size:12px;color:var(--text2)">Fotos extras (opcional)</div>
+      <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:8px">${extras.map(f=>'<img src="'+f.data+'" style="width:64px;height:64px;border-radius:8px;object-fit:cover;border:2px solid var(--border)">').join('')}</div>
+      <input type="file" id="fextra" accept="image/*" capture="environment" multiple onchange="capturaExtras(this)">
+      <button class="btn-camera" onclick="document.getElementById('fextra').click()">📷 Adicionar fotos extras</button>
+    </div>
+  </div>`;
+  render(html);
+  const prox=slots.find(s=>!FOTOS_GERAIS[s.id]);
+  if(prox)setTimeout(()=>document.getElementById('fslot-'+prox.id)?.click(),500);
+  addBar('<button class="btn-primary" id="btn-fin" onclick="finalizar()">✅ Finalizar e Enviar</button>');
+  atualizarBotaoFinal();
+}
+
+function capturaFotoGeral(slot,input){
+  const f=input.files[0];if(!f)return;
+  comprimirImagem(f,data=>{FOTOS_GERAIS[slot]={data,nome:f.name};renderFotosGerais();});
+}
+
+function capturaExtras(input){
+  Array.from(input.files).forEach(f=>{
+    comprimirImagem(f,data=>{
+      if(!FOTOS_GERAIS.extras)FOTOS_GERAIS.extras=[];
+      FOTOS_GERAIS.extras.push({data,nome:f.name});renderFotosGerais();
+    });
+  });
+}
+
+function atualizarBotaoFinal(){
+  const btn=document.getElementById('btn-fin');if(!btn)return;
+  const falt=['frente','traseira','lateral_esq','lateral_dir'].filter(k=>!FOTOS_GERAIS[k]);
+  if(falt.length){btn.disabled=true;btn.textContent='📷 Faltam '+falt.length+' foto(s)';return;}
+  btn.disabled=false;btn.textContent='✅ Finalizar e Enviar Check-list';
+}
+
+/* ═══ UPLOAD PARA SUPABASE STORAGE ═══ */
+async function uploadFoto(base64Data, path){
+  // Converte base64 → Blob
+  const byteStr=atob(base64Data.split(',')[1]);
+  const ab=new ArrayBuffer(byteStr.length);
+  const ia=new Uint8Array(ab);
+  for(let i=0;i<byteStr.length;i++)ia[i]=byteStr.charCodeAt(i);
+  const blob=new Blob([ab],{type:'image/jpeg'});
+
+  const storageUrl=`${SB_URL}/storage/v1/object/checklist-fotos/${path}`;
+  const r=await fetch(storageUrl,{
+    method:'POST',
+    headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Content-Type':'image/jpeg','x-upsert':'true'},
+    body:blob
+  });
+  if(!r.ok){const err=await r.text();throw new Error('Upload falhou: '+err);}
+  return `${SB_URL}/storage/v1/object/public/checklist-fotos/${path}`;
+}
+
+/* ═══ FINALIZAR ═══ */
+async function finalizar(){
+  // Modo offline: salva no IndexedDB e mostra tela de pendente
+  if(!navigator.onLine){
+    try{
+      await salvarPendente({
+        token:EXEC.token,execId:EXEC.id,
+        respostas:RESPOSTAS,fotosItem:FOTOS_ITEM,
+        fotosGerais:FOTOS_GERAIS,kmConfirmado:KM_CONFIRMADO
+      });
+    }catch(e){alert('Erro ao salvar offline: '+e.message);return;}
+    renderPendente();
+    return;
+  }
+  const btn=document.getElementById('btn-fin');
+  if(btn){btn.disabled=true;btn.textContent='⏳ Enviando...';}
+  try{
+    const validos=ITENS.filter(i=>RESPOSTAS[i.id]!=='N/A');
+    const oks=validos.filter(i=>RESPOSTAS[i.id]==='OK');
+    const score=validos.length?Math.round(oks.length/validos.length*100):100;
+    const cls=score>=90?'Aprovado':score>=70?'Aprovado com ressalvas':'Reprovado';
+    let lat=null,lng=null;
+    try{const pos=await new Promise((res,rej)=>navigator.geolocation.getCurrentPosition(res,rej,{timeout:5000}));lat=pos.coords.latitude;lng=pos.coords.longitude;}catch(e){}
+
+    await _enviarChecklist();
+  }catch(e){
+    if(btn){btn.disabled=false;btn.textContent='✅ Finalizar e Enviar Check-list';}
+    alert('Erro ao enviar: '+e.message);
+  }
+}
+
+/* ═══ SCORE ═══ */
+function renderScore(score,cls){
+  const oks=ITENS.filter(i=>RESPOSTAS[i.id]==='OK').length;
+  const naos=ITENS.filter(i=>RESPOSTAS[i.id]==='NÃO');
+  const nas=ITENS.filter(i=>RESPOSTAS[i.id]==='N/A').length;
+  const cor=score>=90?'var(--green)':score>=70?'var(--yellow)':'var(--red)';
+  const bg=score>=90?'var(--green-light);color:var(--green)':score>=70?'var(--yellow-light);color:var(--yellow)':'var(--red-light);color:var(--red)';
+  const txt=score>=90?'✅ APROVADO':score>=70?'⚠️ COM RESSALVAS':'🚫 REPROVADO';
+  render(`
+    <div class="hdr"><div class="hdr-row"><div class="hdr-info"><div class="hdr-title">Resultado Final</div><div class="hdr-sub">${VEICULO?.placa} — ${VEICULO?.modelo}</div></div></div></div>
+    <div class="score-screen">
+      <div class="score-hero">
+        <div class="score-num" style="color:${cor}">${score}%</div>
+        <div class="score-badge" style="background:${bg}">${txt}</div>
+        <div class="score-stats">
+          <div class="score-stat"><span style="color:var(--green)">${oks}</span><small>OK</small></div>
+          <div class="score-stat"><span style="color:var(--red)">${naos.length}</span><small>NÃO</small></div>
+          <div class="score-stat"><span style="color:var(--text3)">${nas}</span><small>N/A</small></div>
+          <div class="score-stat"><span style="color:var(--blue)">${(KM_CONFIRMADO||0).toLocaleString('pt-BR')}</span><small>KM</small></div>
+        </div>
+      </div>
+      ${naos.length?`<div class="nao-card"><div class="nao-card-title">❌ Itens com problema (${naos.length})</div>${naos.map(i=>'<div class="nao-item">• '+i.descricao+'</div>').join('')}</div>`:''}
+      <div class="ok-card">
+        <div class="ok-title">✅ Check-list enviado!</div>
+        <div class="ok-sub">KM registrado: ${(KM_CONFIRMADO||0).toLocaleString('pt-BR')} km<br>Dados salvos no sistema. Pode fechar esta página.</div>
+      </div>
+    </div>
+  `);
+}
+
+function renderEstado(title,sub,tipo){
+  const ico=tipo==='ok'?'✅':'⚠️';
+  const cor=tipo==='ok'?'var(--green)':'var(--red)';
+  render(`<div class="estado-wrap"><div class="estado-card">
+    <div style="font-size:52px;margin-bottom:14px">${ico}</div>
+    <div style="font-size:18px;font-weight:700;color:${cor};margin-bottom:8px">${title}</div>
+    <div style="font-size:14px;color:var(--text2);line-height:1.5">${sub}</div>
+  </div></div>`);
+}
+
+function addBar(html){
+  const bar=document.createElement('div');
+  bar.className='bottom-bar';bar.innerHTML=html;
+  document.body.appendChild(bar);
+}
+
+function comprimirImagem(file,cb,maxW=800,q=0.72){
+  const reader=new FileReader();
+  reader.onload=e=>{
+    const img=new Image();
+    img.onload=()=>{
+      const c=document.createElement('canvas');
+      let{width:w,height:h}=img;
+      if(w>maxW){h=Math.round(h*maxW/w);w=maxW;}
+      c.width=w;c.height=h;c.getContext('2d').drawImage(img,0,0,w,h);
+      cb(c.toDataURL('image/jpeg',q));
+    };
+    img.src=e.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+/* ═══ PWA — SERVICE WORKER ═══ */
+if('serviceWorker' in navigator){
+  window.addEventListener('load',()=>{
+    navigator.serviceWorker.register('/sw.js').then(reg=>{
+      console.log('[SW] Registrado:',reg.scope);
+    }).catch(err=>console.warn('[SW] Falha:',err));
+
+    // Ouve mensagem do SW para sincronizar
+    navigator.serviceWorker.addEventListener('message',e=>{
+      if(e.data?.type==='SYNC_PENDENTES') sincronizarPendente();
+    });
+  });
+}
+
+/* ═══ PWA — INSTALL PROMPT ═══ */
+let _installPrompt=null;
+window.addEventListener('beforeinstallprompt',e=>{
+  e.preventDefault();
+  _installPrompt=e;
+  // Mostra banner se ainda não instalado
+  document.getElementById('install-banner')?.style?.setProperty('display','flex');
+});
+window.addEventListener('appinstalled',()=>{
+  _installPrompt=null;
+  document.getElementById('install-banner')?.style?.setProperty('display','none');
+});
+
+async function instalarApp(){
+  if(!_installPrompt)return;
+  _installPrompt.prompt();
+  const{outcome}=await _installPrompt.userChoice;
+  if(outcome==='accepted')document.getElementById('install-banner')?.style?.setProperty('display','none');
+  _installPrompt=null;
+}
+
+/* ═══ OFFLINE — DETECTOR ═══ */
+function atualizarStatusOnline(){
+  const bar=document.getElementById('offline-bar');
+  if(bar) bar.classList.toggle('visible',!navigator.onLine);
+}
+window.addEventListener('online',()=>{
+  atualizarStatusOnline();
+  sincronizarPendente(); // tenta sincronizar automaticamente
+});
+window.addEventListener('offline',atualizarStatusOnline);
+atualizarStatusOnline();
+
+/* ═══ INDEXEDDB — RESPOSTAS PENDENTES ═══ */
+const IDB_NAME='frotas-checklist-offline', IDB_VER=1, IDB_STORE='pendentes';
+
+function abrirIDB(){
+  return new Promise((res,rej)=>{
+    const req=indexedDB.open(IDB_NAME,IDB_VER);
+    req.onupgradeneeded=e=>{
+      const db=e.target.result;
+      if(!db.objectStoreNames.contains(IDB_STORE))
+        db.createObjectStore(IDB_STORE,{keyPath:'token'});
+    };
+    req.onsuccess=e=>res(e.target.result);
+    req.onerror=e=>rej(e.target.error);
+  });
+}
+
+async function salvarPendente(dados){
+  const db=await abrirIDB();
+  return new Promise((res,rej)=>{
+    const tx=db.transaction(IDB_STORE,'readwrite');
+    tx.objectStore(IDB_STORE).put({...dados,timestamp:Date.now()});
+    tx.oncomplete=res; tx.onerror=rej;
+  });
+}
+
+async function getPendente(token){
+  const db=await abrirIDB();
+  return new Promise((res,rej)=>{
+    const req=db.transaction(IDB_STORE,'readonly').objectStore(IDB_STORE).get(token);
+    req.onsuccess=e=>res(e.target.result); req.onerror=rej;
+  });
+}
+
+async function removerPendente(token){
+  const db=await abrirIDB();
+  return new Promise((res,rej)=>{
+    const tx=db.transaction(IDB_STORE,'readwrite');
+    tx.objectStore(IDB_STORE).delete(token);
+    tx.oncomplete=res; tx.onerror=rej;
+  });
+}
+
+/* ═══ TELA: PENDENTE OFFLINE ═══ */
+function renderPendente(){
+  render(`
+    <div class="hdr"><div class="hdr-row">
+      <div class="hdr-info"><div class="hdr-title">Salvo Localmente</div><div class="hdr-sub">Aguardando conexão</div></div>
+    </div></div>
+    <div class="pendente-screen">
+      <div class="pendente-card">
+        <div style="font-size:52px;margin-bottom:14px">📡</div>
+        <div style="font-size:18px;font-weight:700;margin-bottom:8px;color:#b45309">Sem conexão</div>
+        <div style="font-size:14px;color:var(--text2);line-height:1.5;margin-bottom:16px">
+          Suas respostas foram salvas neste dispositivo.<br>
+          Quando a internet voltar, clique em <strong>Sincronizar</strong> para enviar ao sistema.
+        </div>
+        <div style="background:#fef3c7;border-radius:10px;padding:12px;font-size:12px;color:#92400e">
+          ⚠️ Não feche esta aba até sincronizar. As respostas ficam salvas neste navegador.
+        </div>
+      </div>
+      <button class="sync-btn" id="btn-sync" onclick="sincronizarPendente()" ${navigator.onLine?'':'disabled'}>
+        ${navigator.onLine?'☁️ Sincronizar Agora':'📡 Aguardando conexão...'}
+      </button>
+    </div>
+  `);
+  // Atualiza botão quando voltar online
+  window.addEventListener('online',()=>{
+    const b=document.getElementById('btn-sync');
+    if(b){b.disabled=false;b.textContent='☁️ Sincronizar Agora';}
+  });
+}
+
+/* ═══ SINCRONIZAR PENDENTE ═══ */
+async function sincronizarPendente(){
+  if(!EXEC?.token)return;
+  const pendente=await getPendente(EXEC.token);
+  if(!pendente||!navigator.onLine)return;
+
+  // Restaura o estado a partir do IndexedDB
+  RESPOSTAS=pendente.respostas||{};
+  FOTOS_ITEM=pendente.fotosItem||{};
+  FOTOS_GERAIS=pendente.fotosGerais||{frente:null,traseira:null,lateral_esq:null,lateral_dir:null};
+  KM_CONFIRMADO=pendente.kmConfirmado||null;
+
+  const btn=document.getElementById('btn-sync');
+  if(btn){btn.disabled=true;btn.textContent='⏳ Enviando...';}
+
+  try{
+    await _enviarChecklist();
+    await removerPendente(EXEC.token);
+  }catch(e){
+    if(btn){btn.disabled=false;btn.textContent='☁️ Tentar novamente';}
+    alert('Erro ao sincronizar: '+e.message);
+  }
+}
+
+/* ═══ LÓGICA DE ENVIO (extraída do finalizar) ═══ */
+async function _enviarChecklist(){
+  const validos=ITENS.filter(i=>RESPOSTAS[i.id]!=='N/A');
+  const oks=validos.filter(i=>RESPOSTAS[i.id]==='OK');
+  const score=validos.length?Math.round(oks.length/validos.length*100):100;
+  const cls=score>=90?'Aprovado':score>=70?'Aprovado com ressalvas':'Reprovado';
+  let lat=null,lng=null;
+  try{const pos=await new Promise((res,rej)=>navigator.geolocation.getCurrentPosition(res,rej,{timeout:5000}));lat=pos.coords.latitude;lng=pos.coords.longitude;}catch(e){}
+
+  await sbPatch('checklist_execucoes',EXEC.id,{status:'concluido',score,classificacao:cls,fim_em:new Date().toISOString(),latitude:lat,longitude:lng,km_veiculo:KM_CONFIRMADO||EXEC.km_veiculo});
+
+  const totalFotos=Object.values(FOTOS_ITEM).reduce((s,a)=>s+a.length,0)
+    +['frente','traseira','lateral_esq','lateral_dir'].filter(k=>FOTOS_GERAIS[k]).length
+    +(FOTOS_GERAIS.extras||[]).length;
+  let nFoto=0;
+  const btn=document.getElementById('btn-fin')||document.getElementById('btn-sync');
+  const progresso=()=>{if(btn&&totalFotos>0)btn.textContent=`⏳ Enviando fotos... (${nFoto}/${totalFotos})`;};
+
+  for(const item of ITENS){
+    const resp=RESPOSTAS[item.id]||'N/A';
+    const[rd]=await sbPost('checklist_respostas',{execucao_id:EXEC.id,item_id:item.id,resposta:resp});
+    for(const f of(FOTOS_ITEM[item.id]||[])){
+      progresso();
+      const path=`${EXEC.id}/item_${rd.id}_${Date.now()}.jpg`;
+      const url=await uploadFoto(f.data,path);
+      await sbPost('checklist_fotos',{execucao_id:EXEC.id,resposta_id:rd.id,tipo:'item',nome_arquivo:f.nome,url});
+      nFoto++;
+    }
+  }
+  for(const s of['frente','traseira','lateral_esq','lateral_dir']){
+    if(FOTOS_GERAIS[s]){
+      progresso();
+      const path=`${EXEC.id}/${s}_${Date.now()}.jpg`;
+      const url=await uploadFoto(FOTOS_GERAIS[s].data,path);
+      await sbPost('checklist_fotos',{execucao_id:EXEC.id,tipo:s,nome_arquivo:FOTOS_GERAIS[s].nome,url});
+      nFoto++;
+    }
+  }
+  for(const[i,f]of(FOTOS_GERAIS.extras||[]).entries()){
+    progresso();
+    const path=`${EXEC.id}/extra_${i}_${Date.now()}.jpg`;
+    const url=await uploadFoto(f.data,path);
+    await sbPost('checklist_fotos',{execucao_id:EXEC.id,tipo:'extra',nome_arquivo:f.nome,url});
+    nFoto++;
+  }
+  renderScore(score,cls);
+
+  // Dispara notificação por e-mail se score < 90%
+  try {
+    const evento = score < 70 ? 'checklist_reprovado' : score < 90 ? 'checklist_ressalvas' : null;
+    if (evento) {
+      const itensNao = ITENS.filter(i => RESPOSTAS[i.id] === 'NAO').map(i => i.descricao || i.item || String(i.id));
+      const dados = {
+        placa: VEICULO?.placa || '—',
+        modelo: VEICULO?.modelo || '—',
+        score,
+        usuario: EXEC?.usuario_nome || '—',
+        data: new Date().toLocaleString('pt-BR'),
+        contrato: VEICULO?.contrato_nome || null,
+        itens_nao: itensNao,
+        url: window.location.origin,
+      };
+      fetch(`${SB_URL}/functions/v1/notificar`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'apikey': SB_KEY, 'Authorization': 'Bearer ' + SB_KEY },
+        body: JSON.stringify({ evento, dados, referencia_id: EXEC?.id || null }),
+      }).catch(() => {});
+    }
+  } catch (e) {}
+}
+
+init();
+</script>
+</body>
+</html>
