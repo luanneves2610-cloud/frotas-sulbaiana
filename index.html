@@ -151,23 +151,23 @@
             <div class="pb" style="height:230px;padding:14px 16px"><canvas id="canvas-donut"></canvas></div>
           </div>
         </div>
-        <div class="g21">
-          <div>
-            <div class="panel">
-              <div class="ph"><div class="pt">🏆 Ranking de Custos</div><span class="fs11 t-mu">custo acumulado total</span></div>
-              <div style="padding:0 18px" id="rank-list"></div>
-            </div>
-            <div class="panel"><div class="ph"><div class="pt">🔔 Alertas</div></div><div style="padding:6px 14px" id="alertas"></div></div>
+        <!-- ROW 1: Ranking 50% + Gasto por Contrato 50% -->
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:18px">
+          <div class="panel">
+            <div class="ph"><div class="pt">🏆 Ranking de Custos</div><span class="fs11 t-mu">custo acumulado total</span></div>
+            <div style="padding:0 18px" id="rank-list"></div>
           </div>
-          <div>
-            <div class="panel">
-              <div class="ph"><div class="pt">💼 Gasto por Contrato</div></div>
-              <div style="padding:10px 14px;height:200px"><canvas id="canvas-contratos-bar"></canvas></div>
-              <div id="dash-contratos" style="padding:0 14px"></div>
-            </div>
-            <div class="panel"><div class="ph"><div class="pt">📍 Por Localidade</div></div><div style="padding:0 14px" id="dash-localidades"></div></div>
-            <div class="panel"><div class="ph"><div class="pt">🚗 Controle de Frota</div></div><div style="padding:10px 14px" id="dash-frota-ct"></div></div>
+          <div class="panel">
+            <div class="ph"><div class="pt">💼 Gasto por Contrato</div></div>
+            <div style="padding:10px 14px;height:200px"><canvas id="canvas-contratos-bar"></canvas></div>
+            <div id="dash-contratos" style="padding:0 14px"></div>
           </div>
+        </div>
+        <!-- ROW 2: Alertas + Por Localidade + Controle de Frota -->
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-bottom:18px">
+          <div class="panel"><div class="ph"><div class="pt">🔔 Alertas</div></div><div style="padding:6px 14px" id="alertas"></div></div>
+          <div class="panel"><div class="ph"><div class="pt">📍 Por Localidade</div></div><div style="padding:0 14px" id="dash-localidades"></div></div>
+          <div class="panel"><div class="ph"><div class="pt">🚗 Controle de Frota</div></div><div style="padding:10px 14px" id="dash-frota-ct"></div></div>
         </div>
       </div>
 
