@@ -135,11 +135,17 @@ export async function gerarChecklistToken(){
   lov(true,'Gerando check-list...');
   try{
     const kmGer=parseInt(document.getElementById('chk-km')?.value)||window.gV(vid).km_atual||0;
+    const vistoriador=document.getElementById('chk-vistoriador')?.value.trim()||'';
+    const localVistoria=document.getElementById('chk-local-vistoria')?.value.trim()||'';
+    const tipoVeiculo=window._chkTipoVeiculo||'carro';
+    const anoFab=window._chkAnoFabricacao||window.gV(vid).ano||'';
     await sbReq('POST','checklist_execucoes',{
       token, veiculo_id:parseInt(vid), tipo,
       status:'pendente', usuario_id:SESSION.id, usuario_nome:SESSION.nome,
       km_veiculo:kmGer, expira_em:expiraEm,
-      tipo_movimentacao:tipo==='movimentacao'?'A definir':null
+      tipo_movimentacao:tipo==='movimentacao'?'A definir':null,
+      tipo_veiculo:tipoVeiculo, vistoriador:vistoriador||null,
+      local_vistoria:localVistoria||null, ano_fabricacao:anoFab||null
     },'');
     await slog(`Check-list gerado: ${window.gV(vid).placa} — token ${token.slice(0,8)}...`);
     const base=window.location.origin+window.location.pathname.replace('index.html','').replace(/\/[^/]*$|$/,'/');
@@ -276,6 +282,18 @@ export function acSelChk(vid){
   document.getElementById('chk-vi-placa').textContent=v.placa;
   document.getElementById('chk-vi-modelo').textContent=`${v.modelo} — KM: ${(v.km_atual||0).toLocaleString('pt-BR')}`;
   document.getElementById('chk-v-info').style.display='block';
+  // Detectar tipo do veículo (MOTO vs CARRO)
+  const tipoRaw=(v.tipo||'').toLowerCase();
+  const isMoto=tipoRaw.includes('moto')||tipoRaw.includes('motocicleta')||tipoRaw.includes('scooter');
+  window._chkTipoVeiculo=isMoto?'moto':'carro';
+  window._chkAnoFabricacao=v.ano||'';
+  const badge=document.getElementById('chk-tipo-veiculo-badge');
+  if(badge){
+    badge.textContent=isMoto?'🏍️ Moto detectada':'🚗 Carro detectado';
+    badge.style.background=isMoto?'#fef3c7':'#dbeafe';
+    badge.style.color=isMoto?'#92400e':'#1e40af';
+    badge.style.display='inline-block';
+  }
 }
 
 export function acBlurChk(){ setTimeout(()=>{document.getElementById('chk-sugestoes').style.display='none';},200); }
@@ -344,17 +362,25 @@ export async function exportarPDFChk(execId){
         ${fotosExtras.map(f=>{const src=f.url||f.dados_base64||'';return src?`<div class="foto-card"><img src="${src}" class="foto-geral"><div class="foto-label">Extra</div></div>`:''}).join('')}
       </div>`:'';
 
+    // ── Detecta tipo de veículo ──
+    const isMotoPDF=(ex.tipo_veiculo||'carro')==='moto';
+    const pdfIcon=isMotoPDF?'🏍️':'🚛';
+    const pdfTipoLabel=isMotoPDF?'CHECK-LIST DE MOTO':'CHECK-LIST DE VEÍCULO';
+    const headerBg=isMotoPDF?'#78350f':'#1e3a8a';
+    const catRowColor=isMotoPDF?'#78350f':'#1e3a8a';
+    const catRowBg=isMotoPDF?'#fff7ed':'#eff6ff';
+
     // ── HTML completo do PDF ──
     const html=`<!DOCTYPE html><html lang="pt-BR"><head>
 <meta charset="UTF-8">
-<title>Check-list ${v.placa||''} — ${fd(ex.criado_em?.slice(0,10))}</title>
+<title>${pdfTipoLabel} — ${v.placa||''} — ${fd(ex.criado_em?.slice(0,10))}</title>
 <style>
   *{margin:0;padding:0;box-sizing:border-box}
   body{font-family:'Segoe UI',Arial,sans-serif;font-size:11px;color:#0f172a;background:#fff;padding:20px}
   @page{size:A4;margin:15mm 12mm}
   @media print{body{padding:0}.no-print{display:none!important}}
   /* Cabeçalho */
-  .header{display:flex;justify-content:space-between;align-items:flex-start;padding:14px 16px;background:#1e3a8a;color:#fff;border-radius:8px;margin-bottom:12px}
+  .header{display:flex;justify-content:space-between;align-items:flex-start;padding:14px 16px;background:${headerBg};color:#fff;border-radius:8px;margin-bottom:12px}
   .header-left .brand{font-size:16px;font-weight:800;letter-spacing:.5px}
   .header-left .sub{font-size:10px;opacity:.75;margin-top:2px}
   .header-right{text-align:right}
@@ -365,6 +391,10 @@ export async function exportarPDFChk(execId){
   .info-cell{background:#f8fafc;border:1px solid #e2e8f0;border-radius:6px;padding:7px 10px}
   .info-cell .label{font-size:9px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.5px;margin-bottom:2px}
   .info-cell .value{font-size:12px;font-weight:600;color:#0f172a}
+  /* Bloco de vistoria */
+  .vistoria-box{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:10px;padding:10px 12px;background:#f0f9ff;border:1px solid #bae6fd;border-radius:8px}
+  .vistoria-box .label{font-size:9px;font-weight:700;color:#0369a1;text-transform:uppercase;letter-spacing:.5px;margin-bottom:2px}
+  .vistoria-box .value{font-size:12px;font-weight:600;color:#0f172a}
   /* Score */
   .score-box{display:flex;align-items:center;gap:16px;background:${bgScore};border:2px solid ${corScore};border-radius:8px;padding:12px 16px;margin-bottom:10px}
   .score-num{font-size:42px;font-weight:900;color:${corScore};line-height:1;font-family:monospace}
@@ -379,7 +409,7 @@ export async function exportarPDFChk(execId){
   table{width:100%;border-collapse:collapse;font-size:11px;margin-bottom:12px}
   table th{background:#f1f5f9;padding:6px 8px;text-align:left;font-size:9px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.5px;border-bottom:2px solid #e2e8f0}
   table td{padding:6px 8px;border-bottom:1px solid #f1f5f9;vertical-align:middle}
-  .cat-row{background:#eff6ff;font-weight:700;font-size:10px;color:#1e3a8a;padding:5px 8px!important}
+  .cat-row{background:${catRowBg};font-weight:700;font-size:10px;color:${catRowColor};padding:5px 8px!important}
   .num{width:28px;color:#94a3b8;font-size:10px;text-align:center}
   .desc{flex:1}
   .resp{width:80px;text-align:center;font-weight:700;font-size:11px;white-space:nowrap}
@@ -395,6 +425,12 @@ export async function exportarPDFChk(execId){
   .foto-card{border:1px solid #e2e8f0;border-radius:6px;overflow:hidden}
   .foto-geral{width:100%;height:130px;object-fit:cover;display:block}
   .foto-label{font-size:9px;font-weight:700;color:#64748b;padding:4px 8px;background:#f8fafc;text-align:center}
+  /* Assinaturas */
+  .sig-area{display:grid;grid-template-columns:1fr 1fr;gap:48px;margin-top:28px;padding-top:0}
+  .sig-box{text-align:center}
+  .sig-line{border-bottom:1.5px solid #334155;margin-bottom:5px;height:40px}
+  .sig-name{font-size:10px;color:#334155;font-weight:700}
+  .sig-role{font-size:9px;color:#94a3b8;margin-top:2px}
   /* Rodapé */
   .footer{margin-top:16px;padding-top:10px;border-top:1px solid #e2e8f0;display:flex;justify-content:space-between;font-size:9px;color:#94a3b8}
   .print-btn{position:fixed;top:16px;right:16px;padding:10px 20px;background:#1d6fdf;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer}
@@ -405,8 +441,8 @@ export async function exportarPDFChk(execId){
 
 <div class="header">
   <div class="header-left">
-    <div class="brand">🚛 FROTAS SULBAIANA</div>
-    <div class="sub">Sulbaiana Empreendimentos — Check-list de Veículo</div>
+    <div class="brand">${pdfIcon} FROTAS SULBAIANA</div>
+    <div class="sub">Sulbaiana Empreendimentos — ${pdfTipoLabel}</div>
   </div>
   <div class="header-right">
     <div class="placa">${v.placa||'—'}</div>
@@ -418,10 +454,17 @@ export async function exportarPDFChk(execId){
   <div class="info-cell"><div class="label">Data</div><div class="value">${fd(ex.criado_em?.slice(0,10))}</div></div>
   <div class="info-cell"><div class="label">Usuário</div><div class="value">${ex.usuario_nome||'—'}</div></div>
   <div class="info-cell"><div class="label">KM Registrado</div><div class="value">${(ex.km_veiculo||0).toLocaleString('pt-BR')} km</div></div>
-  <div class="info-cell"><div class="label">Tipo</div><div class="value">${ex.tipo==='movimentacao'?'🔄 Movimentação':'📊 Auditoria'}</div></div>
+  <div class="info-cell"><div class="label">Tipo de Vistoria</div><div class="value">${ex.tipo==='movimentacao'?'🔄 Movimentação':'📊 Auditoria'}</div></div>
   <div class="info-cell"><div class="label">Duração</div><div class="value">${dur}</div></div>
-  <div class="info-cell"><div class="label">Localização</div><div class="value">${ex.latitude?`📍 ${Number(ex.latitude).toFixed(5)}, ${Number(ex.longitude).toFixed(5)}`:'—'}</div></div>
+  <div class="info-cell"><div class="label">Ano de Fabricação</div><div class="value">${ex.ano_fabricacao||'—'}</div></div>
 </div>
+
+${(ex.vistoriador||ex.local_vistoria)?`
+<div class="vistoria-box">
+  <div><div class="label">👤 Vistoriador</div><div class="value">${ex.vistoriador||'—'}</div></div>
+  <div><div class="label">📍 Local da Vistoria</div><div class="value">${ex.local_vistoria||'—'}</div></div>
+</div>`:''}
+
 
 <div class="score-box">
   <div class="score-num">${score}%</div>
@@ -446,8 +489,21 @@ export async function exportarPDFChk(execId){
 ${fotosGeraisHTML}
 ${fotosExtrasHTML}
 
+<div class="sig-area">
+  <div class="sig-box">
+    <div class="sig-line"></div>
+    <div class="sig-name">${ex.vistoriador||'Vistoriador'}</div>
+    <div class="sig-role">Responsável pela Vistoria</div>
+  </div>
+  <div class="sig-box">
+    <div class="sig-line"></div>
+    <div class="sig-name">Motorista / Responsável</div>
+    <div class="sig-role">Confirmação de Recebimento</div>
+  </div>
+</div>
+
 <div class="footer">
-  <span>Check-list gerado em ${new Date(ex.criado_em).toLocaleString('pt-BR')} · Sistema FROTAS — Sulbaiana Empreendimentos</span>
+  <span>${pdfTipoLabel} gerado em ${new Date(ex.criado_em).toLocaleString('pt-BR')} · Sistema FROTAS — Sulbaiana Empreendimentos</span>
   <span>Token: ${ex.token?.slice(0,12)||'—'}...</span>
 </div>
 

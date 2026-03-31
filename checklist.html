@@ -170,9 +170,10 @@ async function init(){
       if(EXEC.status!=='expirado')await sbPatch('checklist_execucoes',EXEC.id,{status:'expirado'});
       return renderEstado('Link expirado','Este link expirou. Solicite um novo ao responsável.','warning');
     }
+    const tipoVeiculo=EXEC.tipo_veiculo||'carro';
     const [veics,itens]=await Promise.all([
       sbGet('veiculos','id=eq.'+EXEC.veiculo_id+'&select=*,contratos(nome_contrato),localidades(nome_localidade)'),
-      sbGet('checklist_itens','ativo=eq.true&order=ordem.asc&select=*')
+      sbGet('checklist_itens','ativo=eq.true&tipo_veiculo=eq.'+tipoVeiculo+'&order=ordem.asc&select=*')
     ]);
     VEICULO=veics[0];ITENS=itens;
     renderConfirmar();
