@@ -312,7 +312,7 @@ body.light .sb-brand {
 
 /* Seção label */
 .nsec {
-  font-size: 9px !important;
+  font-size: 10px !important;
   font-weight: 600 !important;
   letter-spacing: 0.14em !important;
   text-transform: uppercase !important;
@@ -343,7 +343,7 @@ body.light .sb-brand {
   margin-bottom: 2px !important;
   border: 1px solid transparent !important;
   transition: all 0.13s !important;
-  font-size: 12.5px !important;
+  font-size: 13.5px !important;
   font-weight: 600 !important;
   color: var(--sb-lbl) !important;
   font-family: 'DM Sans', sans-serif !important;

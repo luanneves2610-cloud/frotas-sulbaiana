@@ -283,25 +283,57 @@ export function renderDashContratos() {
   ).join('') || '<div style="padding:16px;color:var(--tm);font-size:13px;text-align:center">Sem dados no período</div>';
 }
 
-// ── Por Localidade ─────────────────────────────────────────────────────────
+// ── Por Localidade (agrupada por contrato, sem zeros) ──────────────────────
 export function renderDashLocalidades() {
   const isAdmin  = SESSION?.perfil === 'admin' || SESSION?.perfil === 'financeiro';
   const ctFiltro = (!isAdmin && SESSION?.contrato_id) ? parseInt(SESSION.contrato_id) : null;
   const mes = getDashMes();
-  let locs = C.loc.filter(x => x.status === 'ativo');
-  if (ctFiltro) locs = locs.filter(l => C.cc.some(c => c.localidade_id == l.id && c.contrato_id == ctFiltro));
-  document.getElementById('dash-localidades').innerHTML = locs.map(l => {
-    const ids = C.v.filter(v => v.localidade_id == l.id).map(v => v.id);
-    const tot = mes
-      ? C.m.filter(m => ids.includes(m.veiculo_id) && m.data?.startsWith(mes)).reduce((s,m) => s+Number(m.valor),0)
-        + C.a.filter(a => ids.includes(a.veiculo_id) && a.data?.startsWith(mes)).reduce((s,a) => s+Number(a.valor_total),0)
-      : C.m.filter(m => ids.includes(m.veiculo_id)).reduce((s,m) => s+Number(m.valor),0)
-        + C.a.filter(a => ids.includes(a.veiculo_id)).reduce((s,a) => s+Number(a.valor_total),0);
-    return `<div style="display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid var(--b1)">
-      <div><strong style="font-size:13px">📍 ${l.nome_localidade}</strong><div class="fs11 t-mu">${l.cidade||''} · ${ids.length} veíc.</div></div>
-      <div class="t-bl fw7" style="font-family:'Space Grotesk';font-size:13px">${cur(tot)}</div>
+
+  // Contratos ativos
+  const contratos = ctFiltro
+    ? C.ct.filter(x => x.status === 'ativo' && parseInt(x.id) === ctFiltro)
+    : C.ct.filter(x => x.status === 'ativo');
+
+  let html = '';
+  let totalGeral = 0;
+
+  contratos.forEach(ct => {
+    // localidades que têm veículos vinculados a este contrato
+    const veicsCt = C.v.filter(v => v.contrato_id == ct.id);
+    const locIds  = [...new Set(veicsCt.map(v => v.localidade_id))];
+    const locs    = C.loc.filter(l => locIds.includes(l.id) && l.status === 'ativo');
+
+    // calcular custo por localidade e filtrar zeros
+    const locDados = locs.map(l => {
+      const ids = veicsCt.filter(v => v.localidade_id == l.id).map(v => v.id);
+      const tot = mes
+        ? C.m.filter(m => ids.includes(m.veiculo_id) && m.data?.startsWith(mes)).reduce((s,m) => s+Number(m.valor),0)
+          + C.a.filter(a => ids.includes(a.veiculo_id) && a.data?.startsWith(mes)).reduce((s,a) => s+Number(a.valor_total),0)
+        : C.m.filter(m => ids.includes(m.veiculo_id)).reduce((s,m) => s+Number(m.valor),0)
+          + C.a.filter(a => ids.includes(a.veiculo_id)).reduce((s,a) => s+Number(a.valor_total),0);
+      return { l, ids, tot };
+    }).filter(x => x.tot > 0); // oculta zeros
+
+    if (!locDados.length) return; // sem dados neste contrato no período
+
+    const totalCt = locDados.reduce((s, x) => s + x.tot, 0);
+    totalGeral += totalCt;
+
+    html += `<div style="margin-bottom:12px">
+      <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--ac);padding:6px 0 4px;border-bottom:2px solid var(--ac);display:flex;justify-content:space-between;align-items:center">
+        <span>📄 ${ct.nome_contrato}</span>
+        <span style="font-family:'Space Grotesk'">${cur(totalCt)}</span>
+      </div>
+      ${locDados.map(({l, ids, tot}) => `
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0 7px 8px;border-bottom:1px solid var(--b1)">
+        <div><strong style="font-size:12px">📍 ${l.nome_localidade}</strong><div class="fs11 t-mu">${l.cidade||''} · ${ids.length} veíc.</div></div>
+        <div class="t-bl fw7" style="font-family:'Space Grotesk';font-size:13px">${cur(tot)}</div>
+      </div>`).join('')}
     </div>`;
-  }).join('') || '<div style="padding:16px;color:var(--tm);font-size:13px;text-align:center">Sem dados no período</div>';
+  });
+
+  document.getElementById('dash-localidades').innerHTML = html ||
+    '<div style="padding:16px;color:var(--tm);font-size:13px;text-align:center">Sem lançamentos no período</div>';
 }
 
 // ── Alertas de KM ─────────────────────────────────────────────────────────

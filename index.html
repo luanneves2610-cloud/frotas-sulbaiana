@@ -631,6 +631,15 @@
           <option value="locada">🔑 Veículo Locado</option>
         </select>
       </div>
+      <!-- Campo condicional por tipo de frota -->
+      <div class="fgp" id="mv-depreciacao-box">
+        <label>💰 Valor de Depreciação (R$/mês)</label>
+        <input id="mv-valor-depreciacao" type="number" min="0" step="0.01" placeholder="0,00">
+      </div>
+      <div class="fgp" id="mv-locacao-valor-box" style="display:none">
+        <label>💳 Valor de Locação (R$/mês)</label>
+        <input id="mv-valor-locacao" type="number" min="0" step="0.01" placeholder="0,00">
+      </div>
       <div class="fgp s3" id="mv-locador-box" style="display:none">
         <div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:10px;padding:14px 16px">
           <div style="font-weight:600;color:#1d4ed8;margin-bottom:12px;font-size:13px">🔑 Dados do Locador</div>
