@@ -1,5 +1,8 @@
 import { createClient } from '@supabase/supabase-js';
 
+// URL de produção (Vercel) — usada para gerar links do checklist quando em dev local
+export const SITE_URL = 'https://frotas-sulbaiana.vercel.app';
+
 export const SB_URL = 'https://kjblegripbhbrttejiyv.supabase.co';
 export const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtqYmxlZ3JpcGJoYnJ0dGVqaXl2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI2MzIyMTQsImV4cCI6MjA4ODIwODIxNH0.OdyBIFPqSd9NyXwsIAQVhVl2vYln9A_wBtmcJ84ty5c';
 

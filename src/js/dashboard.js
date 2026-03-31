@@ -3,6 +3,12 @@ import { cur, curMonth, fd, toast } from './utils.js';
 import { supabase } from './config.js';
 import { dispararNotificacao } from './notificacoes.js';
 
+// ── Nitidez global dos gráficos ────────────────────────────────────────────
+if (window.Chart) {
+  window.Chart.defaults.devicePixelRatio = window.devicePixelRatio || 2;
+  window.Chart.defaults.font.family = "'Inter', sans-serif";
+}
+
 // ── Estado ─────────────────────────────────────────────────────────────────
 let _semFiltro = false;
 window._semFiltro = false;
@@ -226,7 +232,7 @@ export function renderDashContratos() {
     _chartBar = new Chart(canvas, {
       type: 'bar',
       data: {
-        labels: ctData.map(c => c.nome.length > 14 ? c.nome.slice(0,14)+'…' : c.nome),
+        labels: ctData.map(c => c.nome.length > 9 ? c.nome.slice(0,9)+'…' : c.nome),
         datasets: [
           {
             label: 'Custo (R$)',
@@ -262,7 +268,7 @@ export function renderDashContratos() {
         scales: {
           y:  { beginAtZero:true, grid:{color:'rgba(0,0,0,.04)'}, ticks:{ callback: v => v>=1000?'R$'+(v/1000).toFixed(1)+'k':'R$'+v, font:{size:11} } },
           y1: { position:'right', beginAtZero:true, grid:{drawOnChartArea:false}, ticks:{font:{size:11}} },
-          x:  { grid:{display:false}, ticks:{font:{size:11}, maxRotation:25} }
+          x:  { grid:{display:false}, ticks:{font:{size:10}, maxRotation:45, minRotation:30, autoSkip:false} }
         }
       }
     });

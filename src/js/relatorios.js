@@ -145,15 +145,17 @@ export function previewRel(tipo){
       (v.tipo_frota||'propria')==='locada'?'Locado':'Próprio'
     ]);
   } else if(tipo==='frota'){
-    headers=['Placa','Modelo','Contrato','Localidade','Status','Tipo Frota','Locador','E-mail','Telefone'];
+    headers=['Placa','Modelo','Renavan','Contrato','Localidade','Responsável','Status','Tipo Frota','Locador','E-mail','Telefone'];
     const f2=getFiltrosRel();
     let veicsFrota=C.v;
     if(f2.ct) veicsFrota=veicsFrota.filter(v=>v.contrato_id==f2.ct);
     if(f2.frota) veicsFrota=veicsFrota.filter(v=>(v.tipo_frota||'propria')===f2.frota);
     rows=veicsFrota.map(v=>[
       v.placa,v.modelo,
+      v.renavan||'—',
       gCT(v.contrato_id).nome_contrato||'—',
       gLoc(v.localidade_id).nome_localidade||'—',
+      v.responsavel||'—',
       v.status,
       (v.tipo_frota||'propria')==='locada'?'Veículo Locado':'Frota Própria',
       v.locador_nome||'—',v.locador_email||'—',v.locador_fone||'—'

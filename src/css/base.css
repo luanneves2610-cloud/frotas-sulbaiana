@@ -3,7 +3,7 @@
   --b1:#e2e8f0;--b2:#cbd5e1;
   --ac:#2563eb;--a2:#ea580c;--a3:#059669;--a4:#d97706;--a5:#7c3aed;--rd:#dc2626;
   --tx:#0f172a;--tm:#64748b;--td:#94a3b8;
-  --r:12px;--sw:264px;
+  --r:12px;--sw:240px;
   --sh:0 1px 3px rgba(0,0,0,.06),0 2px 6px rgba(0,0,0,.04);
   --sh2:0 8px 28px rgba(0,0,0,.09);
   --sh3:0 20px 60px rgba(0,0,0,.18);
@@ -30,8 +30,6 @@
 *{margin:0;padding:0;box-sizing:border-box}
 body{
   font-family:'Inter',sans-serif;background:var(--bg);color:var(--tx);min-height:100vh;overflow-x:hidden;font-size:14px;
-  background-image:radial-gradient(circle,rgba(148,163,184,.35) 1px,transparent 1px);
-  background-size:28px 28px;
 }
 [data-theme="dark"] body{background-image:radial-gradient(circle,rgba(30,41,59,.8) 1px,transparent 1px)}
 ::-webkit-scrollbar{width:5px;height:5px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--b2);border-radius:3px}

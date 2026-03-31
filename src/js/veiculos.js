@@ -9,7 +9,8 @@ export function renderV(){
   const fct=document.getElementById('fv-ct').value,floc=document.getElementById('fv-loc').value;
   const fcc=document.getElementById('fv-cc').value,fst=document.getElementById('fv-st').value;
   const fcls=document.getElementById('fv-cls')?.value||'';
-  let d=C.v.filter(v=>(!b||v.placa?.toLowerCase().includes(b)||v.modelo?.toLowerCase().includes(b)||(v.responsavel||'').toLowerCase().includes(b))&&(!fct||v.contrato_id==fct)&&(!floc||v.localidade_id==floc)&&(!fcc||v.centro_custo_id==fcc)&&(!fst||v.status===fst)&&(!fcls||(v.classificacao||'producao')===fcls));
+  const ftipo=document.getElementById('fv-tipo')?.value||'';
+  let d=C.v.filter(v=>(!b||v.placa?.toLowerCase().includes(b)||v.modelo?.toLowerCase().includes(b)||(v.responsavel||'').toLowerCase().includes(b))&&(!fct||v.contrato_id==fct)&&(!floc||v.localidade_id==floc)&&(!fcc||v.centro_custo_id==fcc)&&(!fst||v.status===fst)&&(!fcls||(v.classificacao||'producao')===fcls)&&(!ftipo||(v.tipo||'').toUpperCase()===ftipo.toUpperCase()));
   const ativos=C.v.filter(v=>v.status==='ativo').length;
   const manut=C.v.filter(v=>v.status==='manutenção').length;
   const inat=C.v.filter(v=>v.status==='inativo').length;

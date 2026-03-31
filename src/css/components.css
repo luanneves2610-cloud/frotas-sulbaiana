@@ -1,6 +1,6 @@
 /* ── TABLES ── */
-.tw{overflow-x:auto;border-radius:var(--r);border:1px solid var(--b1)}
-table{width:100%;border-collapse:collapse;font-size:13px}
+.tw{overflow-x:auto;border-radius:var(--r);border:1px solid var(--b1);-webkit-overflow-scrolling:touch}
+table{width:100%;border-collapse:collapse;font-size:13px;min-width:800px}
 thead th{background:var(--s2);padding:9px 14px;text-align:left;font-size:10.5px;font-weight:700;color:var(--tm);letter-spacing:.8px;text-transform:uppercase;border-bottom:1px solid var(--b1);white-space:nowrap}
 thead th:first-child{border-radius:var(--r) 0 0 0}thead th:last-child{border-radius:0 var(--r) 0 0}
 tbody tr{border-bottom:1px solid var(--b1);transition:background .1s}

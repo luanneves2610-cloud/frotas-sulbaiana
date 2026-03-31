@@ -1,7 +1,14 @@
 import { C, SESSION } from './state.js';
 import { fd, lov, slog } from './utils.js';
 import { sbReq } from './api.js';
-import { SB_URL, SB_KEY } from './config.js';
+import { SB_URL, SB_KEY, SITE_URL } from './config.js';
+
+// Retorna a base URL correta: produção em localhost, origem real em deploy
+function _getBaseUrl(){
+  const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+  const origin  = isLocal && SITE_URL ? SITE_URL : window.location.origin;
+  return origin + '/';
+}
 
 let _chkExecs=[], _chkItens=[];
 
@@ -148,7 +155,7 @@ export async function gerarChecklistToken(){
       local_vistoria:localVistoria||null, ano_fabricacao:anoFab||null
     },'');
     await slog(`Check-list gerado: ${window.gV(vid).placa} — token ${token.slice(0,8)}...`);
-    const base=window.location.origin+window.location.pathname.replace('index.html','').replace(/\/[^/]*$|$/,'/');
+    const base=_getBaseUrl();
     const url=`${base}checklist.html?t=${token}`;
     document.getElementById('chk-link').value=url;
     document.getElementById('chk-result').style.display='block';
@@ -166,14 +173,14 @@ export function copiarLink(){
 }
 
 export function copiarLinkExec(token){
-  const base=window.location.origin+window.location.pathname.replace('index.html','').replace(/\/[^/]*$|$/,'/');
+  const base=_getBaseUrl();
   const url=`${base}checklist.html?t=${token}`;
   if(navigator.clipboard) navigator.clipboard.writeText(url);
   window.toast('✅ Link copiado!');
 }
 
 export function mostrarQR(token){
-  const base=window.location.origin+window.location.pathname.replace('index.html','').replace(/\/[^/]*$|$/,'/');
+  const base=_getBaseUrl();
   const url=`${base}checklist.html?t=${token}`;
   document.getElementById('chk-link').value=url;
   document.getElementById('chk-qr').innerHTML='';
