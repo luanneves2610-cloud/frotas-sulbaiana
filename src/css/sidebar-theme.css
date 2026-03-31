@@ -1,0 +1,566 @@
+/* ═══════════════════════════════════════════════════════════════
+   FROTAS — sidebar-theme.css
+   Novo visual: Modo Noite (dark) + Modo Dia (branco & azul vivo)
+   
+   COMO USAR:
+   Adicione no <head> do index.html, DEPOIS dos outros CSS:
+   <link rel="stylesheet" href="src/css/sidebar-theme.css">
+   
+   Este arquivo SOBRESCREVE apenas os estilos da sidebar, topbar
+   e filtros. Todo o resto do sistema (modais, tabelas, formulários)
+   continua funcionando normalmente.
+═══════════════════════════════════════════════════════════════ */
+
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=DM+Mono:wght@400;500;600&display=swap');
+
+/* ── Variáveis — Modo Noite (padrão) ─────────────────────── */
+:root,
+body.dark,
+body:not(.light) {
+  /* Sidebar */
+  --sb-bg:          #0A0E1A;
+  --sb-border:      rgba(255,255,255,0.07);
+  --sb-hdr-bd:      rgba(255,255,255,0.06);
+
+  /* Logo */
+  --sb-logo-grad:   linear-gradient(135deg, #00B4FF, #0044EE);
+  --sb-logo-sh:     0 4px 16px rgba(0,150,255,0.4);
+  --sb-logo-name:   #ffffff;
+  --sb-logo-sub:    rgba(255,255,255,0.28);
+
+  /* User pill */
+  --sb-user-bg:     rgba(255,255,255,0.04);
+  --sb-user-bd:     rgba(255,255,255,0.09);
+  --sb-user-sh:     none;
+  --sb-av-bg:       rgba(0,180,255,0.18);
+  --sb-av-bd:       rgba(0,180,255,0.45);
+  --sb-av-color:    #00B4FF;
+  --sb-uname:       #ffffff;
+  --sb-urole:       #00B4FF;
+
+  /* Seções nav */
+  --sb-sec-color:   rgba(255,255,255,0.20);
+  --sb-sec-line:    rgba(255,255,255,0.06);
+
+  /* Itens nav */
+  --sb-item-hover:  rgba(255,255,255,0.05);
+  --sb-item-act-bg: rgba(0,180,255,0.11);
+  --sb-item-act-bd: rgba(0,180,255,0.22);
+  --sb-item-act-sh: none;
+  --sb-ico-act:     rgba(0,180,255,0.18);
+  --sb-ico-hvr:     rgba(255,255,255,0.04);
+  --sb-lbl:         rgba(255,255,255,0.62);
+  --sb-lbl-act:     #ffffff;
+  --sb-lbl-hvr:     rgba(255,255,255,0.9);
+  --sb-icon:        rgba(255,255,255,0.38);
+  --sb-icon-act:    #00B4FF;
+  --sb-dot:         #00B4FF;
+  --sb-dot-sh:      0 0 7px #00B4FF;
+
+  /* Footer */
+  --sb-ft-bg:       transparent;
+  --sb-ft-bd:       rgba(255,255,255,0.07);
+  --sb-ft-excel-bg: rgba(0,200,100,0.10);
+  --sb-ft-excel-bd: rgba(0,200,100,0.25);
+  --sb-ft-excel-cl: #00D46A;
+  --sb-ft-exit-bg:  rgba(255,55,55,0.10);
+  --sb-ft-exit-bd:  rgba(255,55,55,0.25);
+  --sb-ft-exit-cl:  #FF4444;
+
+  /* Topbar */
+  --tb-bg:          #0A0E1A;
+  --tb-bd:          rgba(255,255,255,0.06);
+  --tb-title:       #ffffff;
+  --tb-bar:         linear-gradient(180deg,#00B4FF,#0044EE);
+
+  /* Live dot */
+  --live-bg:        rgba(0,212,106,0.08);
+  --live-bd:        rgba(0,212,106,0.20);
+  --live-cl:        #00D46A;
+
+  /* Glow */
+  --glow-tl:        rgba(0,180,255,0.13);
+  --glow-br:        rgba(0,60,200,0.10);
+}
+
+/* ── Variáveis — Modo Dia ─────────────────────────────────── */
+body.light {
+  /* Sidebar */
+  --sb-bg:          #FFFFFF;
+  --sb-border:      #DDE6F5;
+  --sb-hdr-bd:      #EBF1FB;
+
+  /* Logo */
+  --sb-logo-grad:   linear-gradient(135deg, #1D6FF5, #1044C8);
+  --sb-logo-sh:     0 4px 14px rgba(29,111,245,0.32);
+  --sb-logo-name:   #0B1E50;
+  --sb-logo-sub:    #8AA0C4;
+
+  /* User pill */
+  --sb-user-bg:     #FFFFFF;
+  --sb-user-bd:     #D2E2F8;
+  --sb-user-sh:     0 2px 8px rgba(29,111,245,0.09);
+  --sb-av-bg:       #1D6FF5;
+  --sb-av-bd:       transparent;
+  --sb-av-color:    #FFFFFF;
+  --sb-uname:       #0B1E50;
+  --sb-urole:       #1D6FF5;
+
+  /* Seções nav */
+  --sb-sec-color:   #B8CAE4;
+  --sb-sec-line:    #EBF1FB;
+
+  /* Itens nav */
+  --sb-item-hover:  #F0F6FF;
+  --sb-item-act-bg: #1D6FF5;
+  --sb-item-act-bd: #1558CC;
+  --sb-item-act-sh: 0 3px 12px rgba(29,111,245,0.28);
+  --sb-ico-act:     rgba(255,255,255,0.18);
+  --sb-ico-hvr:     #E6EFFE;
+  --sb-lbl:         #1A3A6A;
+  --sb-lbl-act:     #FFFFFF;
+  --sb-lbl-hvr:     #0B1E50;
+  --sb-icon:        #4A72B4;
+  --sb-icon-act:    #FFFFFF;
+  --sb-dot:         #FFFFFF;
+  --sb-dot-sh:      none;
+
+  /* Footer */
+  --sb-ft-bg:       #F4F8FF;
+  --sb-ft-bd:       #EBF1FB;
+  --sb-ft-excel-bg: #ECFDF5;
+  --sb-ft-excel-bd: #6EE7B7;
+  --sb-ft-excel-cl: #059669;
+  --sb-ft-exit-bg:  #FEF2F2;
+  --sb-ft-exit-bd:  #FCA5A5;
+  --sb-ft-exit-cl:  #DC2626;
+
+  /* Topbar */
+  --tb-bg:          #FFFFFF;
+  --tb-bd:          #E4EBF8;
+  --tb-title:       #0B1E50;
+  --tb-bar:         linear-gradient(180deg,#1D6FF5,#0044CC);
+
+  /* Live dot */
+  --live-bg:        #ECFDF5;
+  --live-bd:        #A7F3D0;
+  --live-cl:        #059669;
+
+  /* Glow (desativado no dia) */
+  --glow-tl:        transparent;
+  --glow-br:        transparent;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   SIDEBAR
+═══════════════════════════════════════════════════════════ */
+.sidebar {
+  width: 240px !important;
+  background: var(--sb-bg) !important;
+  border-right: 1px solid var(--sb-border) !important;
+  display: flex !important;
+  flex-direction: column !important;
+  position: relative !important;
+  overflow: hidden !important;
+  transition: background 0.25s, border-color 0.25s !important;
+  font-family: 'DM Sans', 'Inter', sans-serif !important;
+}
+
+/* Glow duplo modo noite */
+.sidebar::before {
+  content: '';
+  position: absolute;
+  top: -80px; left: -80px;
+  width: 280px; height: 280px;
+  background: radial-gradient(circle, var(--glow-tl) 0%, transparent 65%);
+  pointer-events: none;
+  z-index: 0;
+}
+.sidebar::after {
+  content: '';
+  position: absolute;
+  bottom: -60px; right: -60px;
+  width: 200px; height: 200px;
+  background: radial-gradient(circle, var(--glow-br) 0%, transparent 70%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* ── Brand / Header ──────────────────────────────────────── */
+.sb-brand {
+  padding: 18px 14px 14px !important;
+  border-bottom: 1px solid var(--sb-hdr-bd) !important;
+  position: relative !important;
+  z-index: 1 !important;
+  background: transparent !important;
+}
+
+body.light .sb-brand {
+  background: linear-gradient(180deg, #F4F8FF 0%, #fff 100%) !important;
+}
+
+.sb-logo {
+  display: flex !important;
+  align-items: center !important;
+  gap: 10px !important;
+  margin-bottom: 13px !important;
+}
+
+.sb-icon {
+  width: 38px !important;
+  height: 38px !important;
+  border-radius: 11px !important;
+  background: var(--sb-logo-grad) !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  flex-shrink: 0 !important;
+  box-shadow: var(--sb-logo-sh) !important;
+  font-size: 18px !important;
+}
+
+.sb-txt strong {
+  display: block !important;
+  color: var(--sb-logo-name) !important;
+  font-size: 15px !important;
+  font-weight: 800 !important;
+  letter-spacing: 0.04em !important;
+  font-family: 'DM Sans', sans-serif !important;
+}
+
+.sb-txt span {
+  display: block !important;
+  color: var(--sb-logo-sub) !important;
+  font-size: 10px !important;
+  font-weight: 400 !important;
+  margin-top: 1px !important;
+}
+
+/* ── User pill ───────────────────────────────────────────── */
+.user-pill {
+  display: flex !important;
+  align-items: center !important;
+  gap: 9px !important;
+  background: var(--sb-user-bg) !important;
+  border: 1px solid var(--sb-user-bd) !important;
+  border-radius: 10px !important;
+  padding: 8px 10px !important;
+  box-shadow: var(--sb-user-sh) !important;
+  cursor: pointer !important;
+  transition: all 0.13s !important;
+}
+
+.user-pill:hover {
+  opacity: 0.88 !important;
+}
+
+.ua {
+  width: 30px !important;
+  height: 30px !important;
+  border-radius: 8px !important;
+  background: var(--sb-av-bg) !important;
+  border: 1.5px solid var(--sb-av-bd) !important;
+  color: var(--sb-av-color) !important;
+  font-size: 13px !important;
+  font-weight: 800 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  flex-shrink: 0 !important;
+  font-family: 'DM Sans', sans-serif !important;
+}
+
+.ui strong {
+  display: block !important;
+  color: var(--sb-uname) !important;
+  font-size: 12px !important;
+  font-weight: 700 !important;
+  font-family: 'DM Sans', sans-serif !important;
+}
+
+.ui span {
+  display: block !important;
+  color: var(--sb-urole) !important;
+  font-size: 9px !important;
+  font-weight: 700 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.08em !important;
+  margin-top: 1px !important;
+}
+
+/* ── Nav ─────────────────────────────────────────────────── */
+.sb-nav {
+  flex: 1 !important;
+  padding: 8px 10px !important;
+  overflow-y: auto !important;
+  position: relative !important;
+  z-index: 1 !important;
+}
+
+.sb-nav::-webkit-scrollbar { width: 3px !important; }
+.sb-nav::-webkit-scrollbar-thumb {
+  background: var(--sb-sec-line) !important;
+  border-radius: 3px !important;
+}
+
+/* Seção label */
+.nsec {
+  font-size: 9px !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.14em !important;
+  text-transform: uppercase !important;
+  color: var(--sb-sec-color) !important;
+  padding: 13px 6px 4px !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  font-family: 'DM Sans', sans-serif !important;
+}
+
+.nsec::after {
+  content: '' !important;
+  flex: 1 !important;
+  height: 1px !important;
+  background: var(--sb-sec-line) !important;
+  display: block !important;
+}
+
+/* Item nav */
+.ni {
+  display: flex !important;
+  align-items: center !important;
+  gap: 9px !important;
+  padding: 8px 8px !important;
+  border-radius: 9px !important;
+  cursor: pointer !important;
+  margin-bottom: 2px !important;
+  border: 1px solid transparent !important;
+  transition: all 0.13s !important;
+  font-size: 12.5px !important;
+  font-weight: 600 !important;
+  color: var(--sb-lbl) !important;
+  font-family: 'DM Sans', sans-serif !important;
+  background: transparent !important;
+  position: relative !important;
+}
+
+.ni:hover {
+  background: var(--sb-item-hover) !important;
+  color: var(--sb-lbl-hvr) !important;
+}
+
+.ni:hover .ic {
+  background: var(--sb-ico-hvr) !important;
+}
+
+.ni.active {
+  background: var(--sb-item-act-bg) !important;
+  border-color: var(--sb-item-act-bd) !important;
+  box-shadow: var(--sb-item-act-sh) !important;
+  color: var(--sb-lbl-act) !important;
+  font-weight: 700 !important;
+}
+
+.ni.active .ic {
+  background: var(--sb-ico-act) !important;
+}
+
+.ni.active svg {
+  stroke: var(--sb-icon-act) !important;
+}
+
+/* Ponto ativo */
+.ni.active::after {
+  content: '' !important;
+  position: absolute !important;
+  right: 8px !important;
+  width: 5px !important;
+  height: 5px !important;
+  border-radius: 50% !important;
+  background: var(--sb-dot) !important;
+  box-shadow: var(--sb-dot-sh) !important;
+  flex-shrink: 0 !important;
+}
+
+/* Ícone container */
+.ic {
+  width: 28px !important;
+  height: 28px !important;
+  border-radius: 7px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  flex-shrink: 0 !important;
+  transition: background 0.13s !important;
+}
+
+.ic svg {
+  width: 14px !important;
+  height: 14px !important;
+  stroke: var(--sb-icon) !important;
+  transition: stroke 0.13s !important;
+}
+
+.ni.active .ic svg,
+.ni:hover .ic svg {
+  stroke: var(--sb-lbl-act) !important;
+}
+
+body.light .ni:hover .ic svg {
+  stroke: var(--sb-lbl-hvr) !important;
+}
+
+/* Badge notificação (mantém funcional) */
+.nb {
+  font-size: 9px !important;
+  font-weight: 700 !important;
+  padding: 2px 6px !important;
+  border-radius: 20px !important;
+  margin-left: auto !important;
+}
+
+/* ── Footer ──────────────────────────────────────────────── */
+.sb-foot {
+  border-top: 1px solid var(--sb-ft-bd) !important;
+  padding: 10px 11px 12px !important;
+  display: flex !important;
+  gap: 8px !important;
+  background: var(--sb-ft-bg) !important;
+  position: relative !important;
+  z-index: 1 !important;
+}
+
+.sb-foot button {
+  flex: 1 !important;
+  height: 34px !important;
+  border-radius: 9px !important;
+  border: none !important;
+  cursor: pointer !important;
+  font-family: 'DM Sans', sans-serif !important;
+  font-size: 11.5px !important;
+  font-weight: 700 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 5px !important;
+  transition: all 0.13s !important;
+}
+
+/* Botão Excel */
+.sb-foot button:first-child {
+  background: var(--sb-ft-excel-bg) !important;
+  border: 1px solid var(--sb-ft-excel-bd) !important;
+  color: var(--sb-ft-excel-cl) !important;
+}
+
+.sb-foot button:first-child:hover {
+  filter: brightness(0.9) !important;
+}
+
+/* Botão Sair */
+.sb-foot button.lo {
+  background: var(--sb-ft-exit-bg) !important;
+  border: 1px solid var(--sb-ft-exit-bd) !important;
+  color: var(--sb-ft-exit-cl) !important;
+}
+
+.sb-foot button.lo:hover {
+  filter: brightness(0.9) !important;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   TOPBAR
+═══════════════════════════════════════════════════════════ */
+.topbar {
+  background: var(--tb-bg) !important;
+  border-bottom: 1px solid var(--tb-bd) !important;
+  padding: 13px 22px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  position: sticky !important;
+  top: 0 !important;
+  z-index: 5 !important;
+  transition: background 0.25s !important;
+}
+
+.tb-title {
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  font-size: 16px !important;
+  font-weight: 800 !important;
+  color: var(--tb-title) !important;
+  letter-spacing: -0.02em !important;
+  font-family: 'DM Sans', sans-serif !important;
+}
+
+.tb-title::before {
+  content: '' !important;
+  display: block !important;
+  width: 3px !important;
+  height: 16px !important;
+  border-radius: 2px !important;
+  background: var(--tb-bar) !important;
+  flex-shrink: 0 !important;
+}
+
+/* Status dot (Supabase live) */
+.sdot {
+  display: flex !important;
+  align-items: center !important;
+  gap: 5px !important;
+  font-size: 11px !important;
+  font-weight: 700 !important;
+  color: var(--live-cl) !important;
+  background: var(--live-bg) !important;
+  border: 1px solid var(--live-bd) !important;
+  border-radius: 20px !important;
+  padding: 3px 10px !important;
+}
+
+.sdot .dot {
+  width: 6px !important;
+  height: 6px !important;
+  border-radius: 50% !important;
+  background: var(--live-cl) !important;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   ANIMAÇÃO PULSE (live dot)
+═══════════════════════════════════════════════════════════ */
+@keyframes sb-pulse {
+  0%, 100% { opacity: 1; box-shadow: 0 0 6px var(--live-cl); }
+  50%       { opacity: 0.4; box-shadow: none; }
+}
+
+.dot.pulse {
+  animation: sb-pulse 2s infinite !important;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   BOTÃO TOGGLE TEMA (já existente no HTML)
+   Apenas padroniza o visual para combinar com o novo tema
+═══════════════════════════════════════════════════════════ */
+#theme-btn {
+  display: flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  padding: 5px 12px !important;
+  border-radius: 20px !important;
+  cursor: pointer !important;
+  font-size: 11px !important;
+  font-weight: 600 !important;
+  font-family: 'DM Sans', sans-serif !important;
+  transition: all 0.15s !important;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   RESPONSIVIDADE — mantém compatível com o layout existente
+═══════════════════════════════════════════════════════════ */
+@media (max-width: 768px) {
+  .sidebar {
+    width: 100% !important;
+    height: auto !important;
+  }
+}

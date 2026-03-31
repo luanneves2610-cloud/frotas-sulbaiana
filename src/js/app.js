@@ -23,14 +23,21 @@ export const cMo=id=>document.getElementById(id).classList.remove('open');
 
 export function toggleTheme(){
   const html=document.documentElement;
+  const body=document.body;
   const isDark=html.getAttribute('data-theme')==='dark';
   if(isDark){
+    // → Modo Claro
     html.removeAttribute('data-theme');
+    body.classList.add('light');
+    body.classList.remove('dark');
     document.getElementById('theme-ico').textContent='🌙';
     document.getElementById('theme-lbl').textContent='Escuro';
     localStorage.setItem('frotas-theme','light');
   } else {
+    // → Modo Escuro
     html.setAttribute('data-theme','dark');
+    body.classList.add('dark');
+    body.classList.remove('light');
     document.getElementById('theme-ico').textContent='☀️';
     document.getElementById('theme-lbl').textContent='Claro';
     localStorage.setItem('frotas-theme','dark');
@@ -40,12 +47,18 @@ export function toggleTheme(){
 // Restaurar tema salvo
 (function(){
   const saved=localStorage.getItem('frotas-theme');
+  const body=document.body;
   if(saved==='dark'){
     document.documentElement.setAttribute('data-theme','dark');
+    body.classList.add('dark');
+    body.classList.remove('light');
     const ico=document.getElementById('theme-ico');
     const lbl=document.getElementById('theme-lbl');
     if(ico) ico.textContent='☀️';
     if(lbl) lbl.textContent='Claro';
+  } else {
+    // Padrão: sidebar escura (sem classe → body:not(.light) = dark sidebar)
+    body.classList.remove('light','dark');
   }
 })();
 

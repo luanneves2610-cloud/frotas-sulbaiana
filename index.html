@@ -4,11 +4,12 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>FROTAS — Sulbaiana Empreendimentos</title>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=DM+Mono:wght@400;500;600&family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <!-- CDN Libraries — must load before module script -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<link rel="stylesheet" href="src/css/sidebar-theme.css">
 </head>
 <body>
 
@@ -40,13 +41,20 @@
   <aside class="sidebar">
     <div class="sb-brand">
       <div class="sb-logo">
-        <div class="sb-icon">🚛</div>
+        <div class="sb-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round">
+            <rect x="1" y="3" width="15" height="13" rx="2"/>
+            <path d="M16 8h4l3 3v3h-7V8z"/>
+            <circle cx="5.5" cy="18.5" r="2.5"/>
+            <circle cx="18.5" cy="18.5" r="2.5"/>
+          </svg>
+        </div>
         <div class="sb-txt"><strong>FROTAS</strong><span>Sulbaiana Empreendimentos</span></div>
       </div>
       <div class="user-pill" onclick="tPM()">
         <div class="ua" id="ua">A</div>
         <div class="ui"><strong id="u-nome">Admin</strong><span id="u-perf">ADMIN</span></div>
-        <span style="font-size:11px;color:var(--tm)">▾</span>
+        <span style="font-size:11px;color:var(--sb-urole)">▾</span>
       </div>
     </div>
     <nav class="sb-nav">
