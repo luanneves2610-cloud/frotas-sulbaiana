@@ -60,18 +60,15 @@ export function onMvFrota(){
   const frota=document.getElementById('mv-frota').value;
   const isLocada=frota==='locada';
   document.getElementById('mv-locador-box').style.display=isLocada?'block':'none';
-  document.getElementById('mv-depreciacao-box').style.display=isLocada?'none':'block';
   document.getElementById('mv-locacao-valor-box').style.display=isLocada?'block':'none';
   if(!isLocada){['mv-loc-nome','mv-loc-email','mv-loc-fone'].forEach(id=>document.getElementById(id).value='');document.getElementById('mv-valor-locacao').value='';}
-  else{document.getElementById('mv-valor-depreciacao').value='';}
 }
 
 export function abrirMV(){
   _ev=null;document.getElementById('mv-t').textContent='🚗 Novo Veículo';
-  ['mv-placa','mv-modelo','mv-cor','mv-renavan','mv-resp','mv-obs','mv-med-nome','mv-med-local','mv-loc-nome','mv-loc-email','mv-loc-fone','mv-valor-depreciacao','mv-valor-locacao'].forEach(id=>document.getElementById(id).value='');
+  ['mv-placa','mv-modelo','mv-cor','mv-renavan','mv-resp','mv-obs','mv-med-nome','mv-med-local','mv-loc-nome','mv-loc-email','mv-loc-fone','mv-valor-locacao'].forEach(id=>document.getElementById(id).value='');
   document.getElementById('mv-frota').value='propria';
   document.getElementById('mv-locador-box').style.display='none';
-  document.getElementById('mv-depreciacao-box').style.display='block';
   document.getElementById('mv-locacao-valor-box').style.display='none';
   document.getElementById('mv-ano').value=new Date().getFullYear();document.getElementById('mv-km').value=0;
   document.getElementById('mv-med-leitura').value=0;
@@ -99,9 +96,7 @@ export function editV(id){
   document.getElementById('mv-loc-email').value=_ev.locador_email||'';
   document.getElementById('mv-loc-fone').value=_ev.locador_fone||'';
   document.getElementById('mv-locador-box').style.display=(_tipoFrota==='locada')?'block':'none';
-  document.getElementById('mv-depreciacao-box').style.display=(_tipoFrota==='locada')?'none':'block';
   document.getElementById('mv-locacao-valor-box').style.display=(_tipoFrota==='locada')?'block':'none';
-  document.getElementById('mv-valor-depreciacao').value=_ev.valor_depreciacao||'';
   document.getElementById('mv-valor-locacao').value=_ev.valor_locacao||'';
   const devBox=document.getElementById('mv-dev-box');
   if(devBox) devBox.style.display=_ev.status==='devolvido'?'block':'none';
@@ -142,7 +137,7 @@ export async function salvarV(){
     med_local:document.getElementById('mv-med-local').value
   }:{med_nome:'',med_unidade:'',med_leitura:0,med_local:''};
   const tipoFrota=document.getElementById('mv-frota').value;
-  const p={placa,modelo,ano:parseInt(document.getElementById('mv-ano').value)||null,tipo:document.getElementById('mv-tipo').value,cor:document.getElementById('mv-cor').value,renavan:document.getElementById('mv-renavan').value,contrato_id:ctId,localidade_id:locId,centro_custo_id:ccId,responsavel:document.getElementById('mv-resp').value,status:document.getElementById('mv-st').value,km_atual:parseInt(document.getElementById('mv-km').value)||0,cliente:document.getElementById('mv-cli').value,obs:document.getElementById('mv-obs').value,classificacao:cls,...medicao,data_cadastro:now(),tipo_frota:tipoFrota,locador_nome:document.getElementById('mv-loc-nome').value||null,locador_email:document.getElementById('mv-loc-email').value||null,locador_fone:document.getElementById('mv-loc-fone').value||null,valor_depreciacao:tipoFrota!=='locada'?(parseFloat(document.getElementById('mv-valor-depreciacao').value)||null):null,valor_locacao:tipoFrota==='locada'?(parseFloat(document.getElementById('mv-valor-locacao').value)||null):null};
+  const p={placa,modelo,ano:parseInt(document.getElementById('mv-ano').value)||null,tipo:document.getElementById('mv-tipo').value,cor:document.getElementById('mv-cor').value,renavan:document.getElementById('mv-renavan').value,contrato_id:ctId,localidade_id:locId,centro_custo_id:ccId,responsavel:document.getElementById('mv-resp').value,status:document.getElementById('mv-st').value,km_atual:parseInt(document.getElementById('mv-km').value)||0,cliente:document.getElementById('mv-cli').value,obs:document.getElementById('mv-obs').value,classificacao:cls,...medicao,data_cadastro:now(),tipo_frota:tipoFrota,locador_nome:document.getElementById('mv-loc-nome').value||null,locador_email:document.getElementById('mv-loc-email').value||null,locador_fone:document.getElementById('mv-loc-fone').value||null,valor_locacao:tipoFrota==='locada'?(parseFloat(document.getElementById('mv-valor-locacao').value)||null):null};
   if(p.status==='devolvido'){
     p.data_devolucao=document.getElementById('mv-dev-data').value||null;
     p.km_devolucao=parseInt(document.getElementById('mv-dev-km').value)||null;

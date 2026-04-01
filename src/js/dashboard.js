@@ -283,57 +283,63 @@ export function renderDashContratos() {
   ).join('') || '<div style="padding:16px;color:var(--tm);font-size:13px;text-align:center">Sem dados no período</div>';
 }
 
-// ── Por Localidade (agrupada por contrato, sem zeros) ──────────────────────
+// ── Ranking Top 10 Localidades por Custo ──────────────────────────────────
 export function renderDashLocalidades() {
   const isAdmin  = SESSION?.perfil === 'admin' || SESSION?.perfil === 'financeiro';
   const ctFiltro = (!isAdmin && SESSION?.contrato_id) ? parseInt(SESSION.contrato_id) : null;
   const mes = getDashMes();
 
-  // Contratos ativos
-  const contratos = ctFiltro
-    ? C.ct.filter(x => x.status === 'ativo' && parseInt(x.id) === ctFiltro)
-    : C.ct.filter(x => x.status === 'ativo');
-
-  let html = '';
-  let totalGeral = 0;
-
-  contratos.forEach(ct => {
-    // localidades que têm veículos vinculados a este contrato
-    const veicsCt = C.v.filter(v => v.contrato_id == ct.id);
-    const locIds  = [...new Set(veicsCt.map(v => v.localidade_id))];
-    const locs    = C.loc.filter(l => locIds.includes(l.id) && l.status === 'ativo');
-
-    // calcular custo por localidade e filtrar zeros
-    const locDados = locs.map(l => {
-      const ids = veicsCt.filter(v => v.localidade_id == l.id).map(v => v.id);
+  // Calcular custo por localidade
+  const rankLoc = C.loc.map(l => {
+    if (ctFiltro) {
+      const veics = C.v.filter(v => v.localidade_id == l.id && v.contrato_id == ctFiltro);
+      if (!veics.length) return null;
+      const ids = veics.map(v => v.id);
+      const ct  = C.ct.find(x => x.id == ctFiltro);
       const tot = mes
         ? C.m.filter(m => ids.includes(m.veiculo_id) && m.data?.startsWith(mes)).reduce((s,m) => s+Number(m.valor),0)
           + C.a.filter(a => ids.includes(a.veiculo_id) && a.data?.startsWith(mes)).reduce((s,a) => s+Number(a.valor_total),0)
         : C.m.filter(m => ids.includes(m.veiculo_id)).reduce((s,m) => s+Number(m.valor),0)
           + C.a.filter(a => ids.includes(a.veiculo_id)).reduce((s,a) => s+Number(a.valor_total),0);
-      return { l, ids, tot };
-    }).filter(x => x.tot > 0); // oculta zeros
+      return { nome: l.nome_localidade, contrato: ct?.nome_contrato||'', total: tot, veics: veics.length };
+    } else {
+      const veics = C.v.filter(v => v.localidade_id == l.id);
+      if (!veics.length) return null;
+      const ids = veics.map(v => v.id);
+      // pegar contrato majoritário
+      const ctId = veics.reduce((acc,v) => { acc[v.contrato_id] = (acc[v.contrato_id]||0)+1; return acc; }, {});
+      const mainCtId = Object.entries(ctId).sort((a,b)=>b[1]-a[1])[0]?.[0];
+      const ct = C.ct.find(x => x.id == mainCtId);
+      const tot = mes
+        ? C.m.filter(m => ids.includes(m.veiculo_id) && m.data?.startsWith(mes)).reduce((s,m) => s+Number(m.valor),0)
+          + C.a.filter(a => ids.includes(a.veiculo_id) && a.data?.startsWith(mes)).reduce((s,a) => s+Number(a.valor_total),0)
+        : C.m.filter(m => ids.includes(m.veiculo_id)).reduce((s,m) => s+Number(m.valor),0)
+          + C.a.filter(a => ids.includes(a.veiculo_id)).reduce((s,a) => s+Number(a.valor_total),0);
+      return { nome: l.nome_localidade, contrato: ct?.nome_contrato||'', total: tot, veics: veics.length };
+    }
+  }).filter(x => x && x.total > 0).sort((a,b) => b.total - a.total).slice(0,10);
 
-    if (!locDados.length) return; // sem dados neste contrato no período
+  const medalColors = ['#f59e0b','#94a3b8','#cd7c2f'];
+  const barColors   = ['#f59e0b','#3b82f6','#10b981','#6366f1','#ec4899','#0ea5e9','#f97316','#8b5cf6','#14b8a6','#ef4444'];
 
-    const totalCt = locDados.reduce((s, x) => s + x.tot, 0);
-    totalGeral += totalCt;
-
-    html += `<div style="margin-bottom:12px">
-      <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--ac);padding:6px 0 4px;border-bottom:2px solid var(--ac);display:flex;justify-content:space-between;align-items:center">
-        <span>📄 ${ct.nome_contrato}</span>
-        <span style="font-family:'Space Grotesk'">${cur(totalCt)}</span>
-      </div>
-      ${locDados.map(({l, ids, tot}) => `
-      <div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0 7px 8px;border-bottom:1px solid var(--b1)">
-        <div><strong style="font-size:12px">📍 ${l.nome_localidade}</strong><div class="fs11 t-mu">${l.cidade||''} · ${ids.length} veíc.</div></div>
-        <div class="t-bl fw7" style="font-family:'Space Grotesk';font-size:13px">${cur(tot)}</div>
-      </div>`).join('')}
-    </div>`;
-  });
-
-  document.getElementById('dash-localidades').innerHTML = html ||
-    '<div style="padding:16px;color:var(--tm);font-size:13px;text-align:center">Sem lançamentos no período</div>';
+  document.getElementById('dash-localidades').innerHTML = rankLoc.length
+    ? rankLoc.map((l,i) => {
+        const pct = (l.total / (rankLoc[0]?.total || 1) * 100).toFixed(0);
+        return `<div style="padding:10px 0;border-bottom:1px solid var(--b1);display:flex;align-items:center;gap:12px">
+          <div style="width:24px;height:24px;border-radius:8px;background:${i<3?medalColors[i]:'var(--s2)'};display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:${i<3?'#fff':'var(--tm)'};flex-shrink:0">${i+1}</div>
+          <div style="flex:1;min-width:0">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+              <strong style="font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:120px" title="${l.nome}">📍 ${l.nome}</strong>
+              <span style="font-size:12px;font-weight:600;color:var(--a2);white-space:nowrap;margin-left:8px">${cur(l.total)}</span>
+            </div>
+            <div style="font-size:10px;color:var(--tm);margin-bottom:5px">${l.contrato} · ${l.veics} veíc.</div>
+            <div style="height:4px;background:var(--b1);border-radius:2px;overflow:hidden">
+              <div style="height:100%;width:${pct}%;background:${barColors[i]||'#6366f1'};border-radius:2px;transition:width .5s"></div>
+            </div>
+          </div>
+        </div>`;
+      }).join('')
+    : '<div style="padding:16px;color:var(--tm);font-size:13px;text-align:center">Sem lançamentos no período</div>';
 }
 
 // ── Alertas de KM ─────────────────────────────────────────────────────────

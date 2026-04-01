@@ -113,15 +113,14 @@ export function previewRel(tipo){
       return[ct.nome_contrato,vids2.length,vProd,vFix,manut.filter(m=>vids2.includes(m.veiculo_id)).length,abast.filter(a=>vids2.includes(a.veiculo_id)).length,cur(cm),cur(ca),cur(cm+ca)];
     });
   } else if(tipo==='veiculos'){
-    headers=['Placa','Modelo','Classificação','Contrato','Localidade','Abastec.','OS','Comb R$','Manut R$','Depreciação R$','Locação R$','Total R$'];
+    headers=['Placa','Modelo','Classificação','Contrato','Localidade','Abastec.','OS','Comb R$','Manut R$','Locação R$','Total R$'];
     rows=veics.map(v=>{
       const cm=manut.filter(m=>m.veiculo_id==v.id).reduce((s,m)=>s+Number(m.valor),0);
       const ca=abast.filter(a=>a.veiculo_id==v.id).reduce((s,a)=>s+Number(a.valor_total),0);
-      const dep=Number(v.valor_depreciacao||0);
       const loc=Number(v.valor_locacao||0);
       const cls=(v.classificacao||'producao')==='producao'?'🚛 Produção':'🏭 Unidade Fixa';
-      return[v.placa,v.modelo,cls,gCT(v.contrato_id).nome_contrato,gLoc(v.localidade_id).nome_localidade,abast.filter(a=>a.veiculo_id==v.id).length,manut.filter(m=>m.veiculo_id==v.id).length,cur(ca),cur(cm),cur(dep),cur(loc),cur(cm+ca+dep+loc)];
-    }).sort((a,b)=>b[11]>a[11]?1:-1);
+      return[v.placa,v.modelo,cls,gCT(v.contrato_id).nome_contrato,gLoc(v.localidade_id).nome_localidade,abast.filter(a=>a.veiculo_id==v.id).length,manut.filter(m=>m.veiculo_id==v.id).length,cur(ca),cur(cm),cur(loc),cur(cm+ca+loc)];
+    }).sort((a,b)=>b[10]>a[10]?1:-1);
   } else if(tipo==='mensal'){
     headers=['Mês','Abastecimentos','Manutenções','Comb R$','Manut R$','Total R$'];
     const mset=[...new Set([...abast.map(a=>a.data?.slice(0,7)),...manut.map(m=>m.data?.slice(0,7))].filter(Boolean))].sort().reverse();
@@ -147,12 +146,11 @@ export function previewRel(tipo){
       (v.tipo_frota||'propria')==='locada'?'Locado':'Próprio'
     ]);
   } else if(tipo==='frota'){
-    headers=['Placa','Modelo','Renavan','Contrato','Localidade','Responsável','Status','Tipo Frota','Locador','E-mail','Telefone'];
     const f2=getFiltrosRel();
     let veicsFrota=C.v;
     if(f2.ct) veicsFrota=veicsFrota.filter(v=>v.contrato_id==f2.ct);
     if(f2.frota) veicsFrota=veicsFrota.filter(v=>(v.tipo_frota||'propria')===f2.frota);
-    headers=['Placa','Modelo','Renavan','Contrato','Localidade','Responsável','Status','Tipo Frota','Depreciação R$','Locação R$','Locador','E-mail','Telefone'];
+    headers=['Placa','Modelo','Renavan','Contrato','Localidade','Responsável','Status','Tipo Frota','Locação R$','Locador','E-mail','Telefone'];
     rows=veicsFrota.map(v=>[
       v.placa,v.modelo,
       v.renavan||'—',
@@ -161,7 +159,7 @@ export function previewRel(tipo){
       v.responsavel||'—',
       v.status,
       (v.tipo_frota||'propria')==='locada'?'Veículo Locado':'Frota Própria',
-      cur(v.valor_depreciacao||0),cur(v.valor_locacao||0),
+      cur(v.valor_locacao||0),
       v.locador_nome||'—',v.locador_email||'—',v.locador_fone||'—'
     ]);
   } else if(tipo==='movimentacoes'){

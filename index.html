@@ -166,7 +166,7 @@
         <!-- ROW 2: Alertas + Por Localidade + Controle de Frota -->
         <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-bottom:18px">
           <div class="panel"><div class="ph"><div class="pt">🔔 Alertas</div></div><div style="padding:6px 14px" id="alertas"></div></div>
-          <div class="panel"><div class="ph"><div class="pt">📍 Por Localidade</div></div><div style="padding:0 14px" id="dash-localidades"></div></div>
+          <div class="panel"><div class="ph"><div class="pt">🏆 Ranking de Localidades</div></div><div style="padding:0 14px" id="dash-localidades"></div></div>
           <div class="panel"><div class="ph"><div class="pt">🚗 Controle de Frota</div></div><div style="padding:10px 14px" id="dash-frota-ct"></div></div>
         </div>
       </div>
@@ -631,11 +631,7 @@
           <option value="locada">🔑 Veículo Locado</option>
         </select>
       </div>
-      <!-- Campo condicional por tipo de frota -->
-      <div class="fgp" id="mv-depreciacao-box">
-        <label>💰 Valor de Depreciação (R$/mês)</label>
-        <input id="mv-valor-depreciacao" type="number" min="0" step="0.01" placeholder="0,00">
-      </div>
+      <!-- Campo Valor de Locação — aparece apenas quando locada -->
       <div class="fgp" id="mv-locacao-valor-box" style="display:none">
         <label>💳 Valor de Locação (R$/mês)</label>
         <input id="mv-valor-locacao" type="number" min="0" step="0.01" placeholder="0,00">
