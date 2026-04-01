@@ -7,8 +7,17 @@ let _eu = null;
 let _senhaUid = null;
 
 export function renderU() {
+  const isAdmin = SESSION?.perfil === 'admin';
+
+  // Controla visibilidade do botão "Novo Usuário"
+  const fbarEl = document.querySelector('#usuarios .fbar');
+  if (fbarEl) fbarEl.style.display = isAdmin ? '' : 'none';
+
+  // Não-admins só enxergam o próprio cadastro
+  const lista = isAdmin ? C.u : C.u.filter(u => u.id == SESSION?.id);
+
   const pb = p => p === 'admin' ? 'b-rd' : p === 'financeiro' ? 'b-pu' : p === 'operacional' ? 'b-bl' : 'b-gy';
-  document.getElementById('tb-u').innerHTML = C.u.map(u => {
+  document.getElementById('tb-u').innerHTML = lista.map(u => {
     const ct = u.contrato_id ? gCT(u.contrato_id).nome_contrato || '—' : 'Todos';
     const migrado = u.auth_id ? '🔒' : '⚠️';
     const migradoTitle = u.auth_id ? 'Supabase Auth ativo' : 'Usuário legado — senha no banco';
@@ -19,12 +28,12 @@ export function renderU() {
       <td class="fs11"><span class="badge b-gy" style="font-size:10px">${ct}</span></td>
       <td><span class="badge ${u.status === 'ativo' ? 'b-gr' : 'b-gy'}">${u.status}</span></td>
       <td><div style="display:flex;gap:5px">
-        <button class="btn btn-g btn-sm" onclick="editU('${u.id}')">✏️</button>
-        <button class="btn btn-g btn-sm" onclick="togU('${u.id}')">${u.status === 'ativo' ? '🚫' : '✅'}</button>
-        <button class="btn btn-sm btn-ic" onclick="abrirTrocaSenha('${u.id}','${u.nome}','${u.email}')" title="Redefinir senha" style="background:#fefce8;border:1px solid #fde68a;color:#b45309">🔑</button>
+        ${isAdmin ? `<button class="btn btn-g btn-sm" onclick="editU('${u.id}')">✏️</button>
+        <button class="btn btn-g btn-sm" onclick="togU('${u.id}')">${u.status === 'ativo' ? '🚫' : '✅'}</button>` : ''}
+        <button class="btn btn-sm btn-ic" onclick="abrirTrocaSenha('${u.id}','${u.nome}','${u.email}')" title="${isAdmin ? 'Redefinir senha' : 'Alterar minha senha'}" style="background:#fefce8;border:1px solid #fde68a;color:#b45309">🔑</button>
       </div></td>
     </tr>`;
-  }).join('');
+  }).join('') || `<tr><td colspan="6" style="text-align:center;padding:32px;color:var(--tm)">Nenhum usuário encontrado</td></tr>`;
 }
 
 export function populateMuCt() {

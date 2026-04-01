@@ -273,6 +273,11 @@ async function confirmarVeiculo(){
 }
 
 /* ═══ TELA 2: CHECK-LIST ═══ */
+// Remove acentos e cedilha de textos vindos do banco de dados
+function stripAcc(s){
+  return (s||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^\x00-\x7F\u00C0-\u024F ]/g,(c)=>c);
+}
+
 function getCats(){
   const c={};ITENS.forEach(i=>{if(!c[i.categoria])c[i.categoria]=[];c[i.categoria].push(i);});return c;
 }
@@ -305,7 +310,7 @@ function renderChecklist(){
   `;
   let idx=0;
   Object.entries(cats).forEach(([cat,itens])=>{
-    html+='<div class="secao"><div class="secao-title">'+cat+'</div>';
+    html+='<div class="secao"><div class="secao-title">'+stripAcc(cat)+'</div>';
     itens.forEach(item=>{
       idx++;
       const r=RESPOSTAS[item.id]||null;
@@ -313,7 +318,7 @@ function renderChecklist(){
       const fotos=FOTOS_ITEM[item.id]||[];
       html+=`<div class="item ${cls}" id="item-${item.id}">
         <div class="item-num">${String(idx).padStart(2,'0')}</div>
-        <div class="item-desc">${item.descricao}${!item.obrigatorio?'<span class="item-opt"> (opcional)</span>':''}</div>
+        <div class="item-desc">${stripAcc(item.descricao)}${!item.obrigatorio?'<span class="item-opt"> (opcional)</span>':''}</div>
         <div class="btns">
           <button class="btn-op ${r==='OK'?'sel-ok':''}" onclick="responder(${item.id},'OK')">✅<br>OK</button>
           <button class="btn-op ${r==='NÃO'?'sel-nao':''}" onclick="responder(${item.id},'NÃO')">❌<br>NÃO</button>

@@ -5,6 +5,11 @@ import { sbReq } from './api.js';
 export const TITLES={dashboard:'Dashboard',contratos:'Contratos',localidades:'Localidades',centros:'Centros de Custo',veiculos:'Veículos',movimentacao:'🔄 Movimentação de Veículos',checklist:'📋 Check-list de Veículos',abastecimento:'Abastecimento',manutencao:'Manutenção',multas:'🚨 Gestão de Multas',vendas:'💰 Venda de Veículos','imp-veiculos':'📥 Importar Veículos','imp-combustivel':'📥 Importar Combustível',relatorios:'Relatórios',historico:'Histórico',usuarios:'Usuários',notificacoes:'🔔 Notificações'};
 
 export function goTo(sec,el){
+  // Bloqueia seções restritas para não-admins
+  if(sec==='usuarios' && SESSION?.perfil !== 'admin'){
+    // Permite acesso apenas para ver o próprio cadastro
+    // renderU() já filtra — deixa passar mas não executa nenhuma ação restrita
+  }
   document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
   document.querySelectorAll('.ni').forEach(n=>n.classList.remove('active'));
   document.getElementById(sec).classList.add('active');
