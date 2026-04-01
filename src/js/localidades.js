@@ -6,12 +6,14 @@ let _eloc=null;
 
 export function renderLoc(){
   const fct=document.getElementById('floc-ct')?.value||'';
+  const fb=(document.getElementById('floc-b')?.value||'').toLowerCase();
   let locs=C.loc;
-  if(fct) locs=C.loc.filter(l=>C.cc.some(c=>c.localidade_id==l.id&&c.contrato_id==fct));
+  if(fct) locs=locs.filter(l=>C.cc.some(c=>c.localidade_id==l.id&&c.contrato_id==fct));
+  if(fb)  locs=locs.filter(l=>(l.nome_localidade||'').toLowerCase().includes(fb)||(l.cidade||'').toLowerCase().includes(fb));
   document.getElementById('tb-loc').innerHTML=locs.map(l=>{
     const ids=C.v.filter(v=>v.localidade_id===l.id).map(v=>v.id);
     const tot=C.m.filter(m=>ids.includes(m.veiculo_id)).reduce((s,m)=>s+Number(m.valor),0)+C.a.filter(a=>ids.includes(a.veiculo_id)).reduce((s,a)=>s+Number(a.valor_total),0);
-    return`<tr><td><strong>📍 ${l.nome_localidade}</strong></td><td>${l.cidade||'—'}</td><td>${l.estado||'—'}</td><td><span class="badge b-bl">${ids.length}</span></td><td class="t-or fw7 mono">${cur(tot)}</td><td><span class="badge ${l.status==='ativo'?'b-gr':'b-gy'}">${l.status}</span></td><td><div style="display:flex;gap:5px"><button class="btn btn-g btn-sm" onclick="editLoc('${l.id}')">✏️</button><button class="btn btn-g btn-sm" onclick="togLoc('${l.id}')">${l.status==='ativo'?'🚫':'✅'}</button></div></td></tr>`;
+    return`<tr><td><strong>📍 ${l.nome_localidade}</strong></td><td>${l.cidade||'—'}</td><td>${l.estado||'—'}</td><td><span class="badge b-bl">${ids.length}</span></td><td class="t-or fw7 mono">${cur(tot)}</td><td><span class="badge ${l.status==='ativo'?'b-gr':'b-gy'}">${l.status}</span></td><td><div style="display:flex;gap:5px"><button class="btn btn-g btn-sm" onclick="editLoc('${l.id}')">✏️</button><button class="btn btn-g btn-sm" onclick="togLoc('${l.id}')">${l.status==='ativo'?'🚫':'✅'}</button><button class="btn btn-sm btn-ic" style="background:#fef2f2;color:#dc2626;border:1px solid #fecaca" onclick="delLoc('${l.id}')" title="Excluir">🗑️</button></div></td></tr>`;
   }).join('')||'<tr><td colspan="7" style="text-align:center;padding:24px;color:var(--tm)">Nenhuma localidade encontrada</td></tr>';
   const el=document.getElementById('floc-ct');
   if(el){const v=el.value;el.innerHTML='<option value="">Todos contratos</option>';C.ct.forEach(c=>{el.innerHTML+=`<option value="${c.id}">${c.nome_contrato}</option>`;});el.value=v;}
@@ -25,9 +27,22 @@ export async function salvarLoc(){const nome=document.getElementById('mloc-n').v
 
 export async function togLoc(id){const l=C.loc.find(x=>x.id==id);if(!l)return;lov(true);try{await FB.upd('localidades',id,{status:l.status==='ativo'?'inativo':'ativo'});await window.loadAll();renderLoc();window.toast('✅ Atualizado');}catch(e){window.toast(e.message,'e');}finally{lov(false);}};
 
+export async function delLoc(id){
+  const l=C.loc.find(x=>x.id==id);if(!l)return;
+  const veics=C.v.filter(v=>v.localidade_id==id);
+  if(veics.length>0){window.toast(`🚫 Não é possível excluir: ${veics.length} veículo(s) vinculado(s). Transfira os veículos antes.`,'e');return;}
+  const ccs=C.cc.filter(c=>c.localidade_id==id);
+  if(ccs.length>0){window.toast(`🚫 Não é possível excluir: ${ccs.length} centro(s) de custo vinculado(s). Remova os centros antes.`,'e');return;}
+  if(!confirm(`Excluir a localidade "${l.nome_localidade}"?\nEsta ação é irreversível.`))return;
+  lov(true,'Excluindo...');
+  try{await FB.del('localidades',id);slog(`Localidade excluída: ${l.nome_localidade}`);await window.loadAll();renderLoc();window.toast('✅ Localidade excluída!');}
+  catch(e){window.toast('Erro: '+e.message,'e');}finally{lov(false);}
+}
+
 // Make globally accessible
 window.renderLoc = renderLoc;
 window.abrirMLoc = abrirMLoc;
 window.editLoc = editLoc;
 window.salvarLoc = salvarLoc;
 window.togLoc = togLoc;
+window.delLoc = delLoc;

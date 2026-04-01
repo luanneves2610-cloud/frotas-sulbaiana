@@ -183,6 +183,7 @@
       <!-- LOCALIDADES -->
       <div id="localidades" class="section">
         <div class="fbar">
+          <input type="text" id="floc-b" placeholder="🔍 Buscar localidade..." oninput="renderLoc()" style="min-width:200px">
           <select id="floc-ct" onchange="renderLoc()" style="background:var(--s1);border:1px solid var(--b2);padding:7px 11px;font-size:13px"><option value="">Todos contratos</option></select>
           <button class="btn btn-p btn-sm" id="nav-loc-new" onclick="abrirMLoc()">➕ Nova Localidade</button>
         </div>
@@ -195,6 +196,7 @@
       <!-- CENTROS -->
       <div id="centros" class="section">
         <div class="fbar">
+          <input type="text" id="fcc-b" placeholder="🔍 Buscar centro..." oninput="renderCC()" style="min-width:200px">
           <select id="fcc-ct" onchange="renderCC()" style="background:var(--s1);border:1px solid var(--b2);padding:7px 11px;font-size:13px"><option value="">Todos contratos</option></select>
           <button class="btn btn-p btn-sm" onclick="abrirMCC()">➕ Novo Centro</button>
         </div>
@@ -213,7 +215,7 @@
           <select id="fv-cc" onchange="renderV()" style="background:var(--s1);border:1px solid var(--b2);padding:7px 11px;font-size:13px"><option value="">Todos centros</option></select>
           <select id="fv-st" onchange="renderV()" style="background:var(--s1);border:1px solid var(--b2);padding:7px 11px;font-size:13px"><option value="">Todos status</option><option>ativo</option><option>manutenção</option><option>inativo</option><option>devolvido</option><option value="disp. para venda">disp. para venda</option><option>vendido</option></select>
           <select id="fv-cls" onchange="renderV()" style="background:var(--s1);border:1px solid var(--b2);padding:7px 11px;font-size:13px"><option value="">Produção + Unidade Fixa</option><option value="producao">🚛 Produção</option><option value="unidade_fixa">🏭 Unidade Fixa</option></select>
-          <select id="fv-tipo" onchange="renderV()" style="background:var(--s1);border:1px solid var(--b2);padding:7px 11px;font-size:13px"><option value="">Todos os tipos</option><option value="CARRO">🚗 Carro</option><option value="MOTO">🏍️ Moto</option><option value="CAMINHÃO">🚛 Caminhão</option><option value="VAN">🚐 Van</option><option value="ÔNIBUS">🚌 Ônibus</option><option value="PICKUP">🛻 Pickup</option></select>
+          <select id="fv-tipo" onchange="renderV()" style="background:var(--s1);border:1px solid var(--b2);padding:7px 11px;font-size:13px"><option value="">Todos os tipos</option><option value="CARRO">🚗 Carro</option><option value="MOTO">🏍️ Moto</option><option value="CAMINHÃO">🚛 Caminhão</option><option value="RETROESCAVADEIRA">🚧 Retroescavadeira</option><option value="ÔNIBUS">🚌 Ônibus</option><option value="PICKUP">🛻 Pickup</option></select>
           <div class="fsep"></div>
           <button class="btn btn-p btn-sm" onclick="abrirMV()">➕ Novo</button>
           <button class="btn btn-or btn-sm" onclick="goTo('imp-veiculos',null)">📥 Importar Excel</button>
@@ -624,7 +626,7 @@
       <div class="fgp"><label>🔴 Contrato *</label><select id="mv-ct" onchange="onMvContrato()"><option value="">— Selecione —</option></select></div>
       <div class="fgp"><label>🔴 Localidade *</label><select id="mv-loc" onchange="onMvLocalidade()"><option value="">— Selecione —</option></select></div>
       <div class="fgp"><label>🔴 Centro de Custo *</label><select id="mv-cc"><option value="">— Selecione —</option></select></div>
-      <div class="fgp"><label>Tipo</label><select id="mv-tipo"><option>MOTO</option><option>CARRO</option><option>CAMINHÃO</option><option>VAN</option><option>PICKUP</option></select></div>
+      <div class="fgp"><label>Tipo</label><select id="mv-tipo"><option>MOTO</option><option>CARRO</option><option>CAMINHÃO</option><option>RETROESCAVADEIRA</option><option>PICKUP</option></select></div>
       <div class="fgp"><label>Tipo de Frota *</label>
         <select id="mv-frota" onchange="onMvFrota()" style="background:var(--s1);border:1px solid var(--b2);padding:8px 12px;border-radius:8px;font-size:13px;width:100%">
           <option value="propria">🏢 Frota Própria</option>
