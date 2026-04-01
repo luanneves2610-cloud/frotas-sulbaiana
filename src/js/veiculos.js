@@ -137,7 +137,9 @@ export async function salvarV(){
     med_local:document.getElementById('mv-med-local').value
   }:{med_nome:'',med_unidade:'',med_leitura:0,med_local:''};
   const tipoFrota=document.getElementById('mv-frota').value;
-  const p={placa,modelo,ano:parseInt(document.getElementById('mv-ano').value)||null,tipo:document.getElementById('mv-tipo').value,cor:document.getElementById('mv-cor').value,renavan:document.getElementById('mv-renavan').value,contrato_id:ctId,localidade_id:locId,centro_custo_id:ccId,responsavel:document.getElementById('mv-resp').value,status:document.getElementById('mv-st').value,km_atual:parseInt(document.getElementById('mv-km').value)||0,cliente:document.getElementById('mv-cli').value,obs:document.getElementById('mv-obs').value,classificacao:cls,...medicao,data_cadastro:now(),tipo_frota:tipoFrota,locador_nome:document.getElementById('mv-loc-nome').value||null,locador_email:document.getElementById('mv-loc-email').value||null,locador_fone:document.getElementById('mv-loc-fone').value||null,valor_locacao:tipoFrota==='locada'?(parseFloat(document.getElementById('mv-valor-locacao').value)||null):null};
+  const p={placa,modelo,ano:parseInt(document.getElementById('mv-ano').value)||null,tipo:document.getElementById('mv-tipo').value,cor:document.getElementById('mv-cor').value,renavan:document.getElementById('mv-renavan').value,contrato_id:ctId,localidade_id:locId,centro_custo_id:ccId,responsavel:document.getElementById('mv-resp').value,status:document.getElementById('mv-st').value,km_atual:parseInt(document.getElementById('mv-km').value)||0,cliente:document.getElementById('mv-cli').value,obs:document.getElementById('mv-obs').value,classificacao:cls,...medicao,tipo_frota:tipoFrota,locador_nome:document.getElementById('mv-loc-nome').value||null,locador_email:document.getElementById('mv-loc-email').value||null,locador_fone:document.getElementById('mv-loc-fone').value||null,valor_locacao:tipoFrota==='locada'?(parseFloat(document.getElementById('mv-valor-locacao').value)||null):null};
+  // data_cadastro só para novos registros
+  if(!_ev) p.data_cadastro=now();
   if(p.status==='devolvido'){
     p.data_devolucao=document.getElementById('mv-dev-data').value||null;
     p.km_devolucao=parseInt(document.getElementById('mv-dev-km').value)||null;
@@ -146,7 +148,33 @@ export async function salvarV(){
   } else {
     p.data_devolucao=null; p.km_devolucao=null; p.destino_devolucao=null;
   }
-  lov(true,'Salvando...');try{if(_ev)await FB.upd('veiculos',_ev.id,p);else await FB.add('veiculos',p);slog(`Veículo ${_ev?'editado':'cadastrado'}: ${placa}`);await window.loadAll();window.cMo('mo-v');renderV();window.toast(`✅ ${placa} salvo!`);}catch(e){window.toast('Erro: '+e.message,'e');}finally{lov(false);}
+  // Verifica duplicata de placa antes de chamar a API
+  const placaDup=C.v.find(v=>v.placa===placa&&(!_ev||v.id!=_ev.id));
+  if(placaDup){
+    window.toast(`🚫 Placa ${placa} já está cadastrada! Verifique a aba Veículos.`,'e');
+    return;
+  }
+  lov(true,'Salvando...');
+  try{
+    if(_ev) await FB.upd('veiculos',_ev.id,p);
+    else    await FB.add('veiculos',p);
+    slog(`Veículo ${_ev?'editado':'cadastrado'}: ${placa}`);
+    await window.loadAll();
+    window.cMo('mo-v');
+    renderV();
+    window.toast(`✅ ${placa} salvo!`);
+  }catch(e){
+    // Interpreta erros comuns com mensagem amigável
+    let msg=e.message||'';
+    try{ const j=JSON.parse(msg); msg=j.message||msg; }catch(_){}
+    if(msg.includes('23505')||msg.toLowerCase().includes('duplicate')||msg.toLowerCase().includes('unique')){
+      window.toast(`🚫 Placa ${placa} já cadastrada! Feche e verifique na aba Veículos.`,'e');
+    } else if(msg.includes('PGRST204')||msg.includes('schema cache')){
+      window.toast('⚠️ Coluna não encontrada. Execute o SQL de migração no Supabase (valor_locacao.sql).','e');
+    } else {
+      window.toast('Erro: '+msg,'e');
+    }
+  }finally{lov(false);}
 }
 
 export function onMvClassificacao(){
