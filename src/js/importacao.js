@@ -236,70 +236,102 @@ export function limparImpV(){
 }
 
 export function baixarModeloCombustivel(){
+  // Colunas na mesma ordem do Relatório de Combustível
   const rows = [
     ['PLACA','DATA','KM_ATUAL','LITROS','VALOR_TOTAL','TIPO_COMBUSTIVEL','POSTO'],
-    ['SKJ1H29','25/01/2026',24500,35.5,245.80,'Gasolina','Auto Posto Central'],
-    ['ABC1D23','26/01/2026',18200,28.0,193.60,'Gasolina','Posto BR'],
+    ['OLA5934','30/03/2026',95655,49.61,347.04,'Gasolina','Auto Posto Alagoinhas'],
+    ['SKJ1H29','25/01/2026',24500,35.50,245.80,'Gasolina','Auto Posto Central'],
+    ['ABC1D23','26/01/2026',18200,28.00,193.60,'Etanol','Posto BR'],
   ];
   window.gerarExcelSimples('Modelo_Importacao_Combustivel', rows);
-  toast('✅ Modelo baixado!','i');
+  toast('✅ Modelo baixado! Use sempre o formato .xlsx para evitar erros com decimais.','i');
 }
 
-// FINAL version — uses SheetJS (XLSX CDN global)
+// Lê arquivo de combustível — suporta .xlsx e .csv (separador ponto-e-vírgula)
 export function lerArquivoCombustivel(input){
   const file=input.files[0];if(!file)return;
   const reader=new FileReader();
   reader.onload=function(e){
     try{
-      if(file.name.endsWith('.csv')){
-        const rows=e.target.result.split('\n').map(r=>r.split(/[,;]/).map(c=>c.trim().replace(/^"|"$/g,'')));
+      if(file.name.toLowerCase().endsWith('.csv')){
+        // CSV: usa APENAS ponto-e-vírgula como delimitador
+        // (vírgula é separador decimal no Brasil — não pode ser delimitador)
+        const rows=e.target.result.split('\n').map(r=>
+          r.split(';').map(c=>c.trim().replace(/^"|"$/g,''))
+        );
         processarPlanilhaCombustivel(rows);
       } else {
+        // XLSX: usa SheetJS com raw:true para preservar números com decimais
         const wb=XLSX.read(e.target.result,{type:'array'});
         const ws=wb.Sheets[wb.SheetNames[0]];
-        const rows=XLSX.utils.sheet_to_array(ws).map(r=>r.map(c=>String(c||'').trim()));
+        // sheet_to_json com raw:true retorna JS floats reais (49.61, não "49,61")
+        const json=XLSX.utils.sheet_to_json(ws,{header:1,raw:true,defval:''});
+        // Converte para array de strings preservando decimais com ponto
+        const rows=json.map(r=>r.map(c=>{
+          if(typeof c==='number') return String(c); // 49.61 → "49.61"
+          return String(c||'').trim();
+        }));
         processarPlanilhaCombustivel(rows);
       }
-    }catch(err){toast('Erro ao ler: '+err.message,'e');}
+    }catch(err){toast('Erro ao ler arquivo: '+err.message,'e');}
   };
-  if(file.name.endsWith('.csv')) reader.readAsText(file,'utf-8');
+  if(file.name.toLowerCase().endsWith('.csv')) reader.readAsText(file,'utf-8');
   else reader.readAsArrayBuffer(file);
 }
 
 export function parseBRDate(s){
   if(!s)return null;
   s=String(s).trim();
-  if(s.includes('/')){const[d,m,y]=s.split('/');return`${y}-${m.padStart(2,'0')}-${d.padStart(2,'0')}`;}
+  // Formato dd/mm/yyyy ou dd-mm-yyyy
+  if(s.includes('/')){const[d,m,y]=s.split('/');return`${y.padStart(4,'20')}-${m.padStart(2,'0')}-${d.padStart(2,'0')}`;}
+  if(s.match(/^\d{2}-\d{2}-\d{4}$/)){const[d,m,y]=s.split('-');return`${y}-${m}-${d}`;}
   return s.slice(0,10);
 }
 
-export function parseBRNum(s){return parseFloat(String(s||'').replace(',','.'));}
+// Converte número brasileiro (vírgula decimal) ou inglês (ponto decimal) para float
+export function parseBRNum(s){
+  if(typeof s==='number') return s; // já é número (vindo do XLSX raw)
+  const str=String(s||'').trim();
+  // Remove separador de milhar (ponto antes de 3 dígitos seguido de outro número)
+  const clean=str.replace(/\.(?=\d{3}(?:[,.]|$))/g,'').replace(',','.');
+  return parseFloat(clean);
+}
 
 export function processarPlanilhaCombustivel(rows){
   if(rows.length<2){toast('Planilha vazia!','e');return;}
-  const headers=rows[0].map(h=>normStr(h));
-  const idx=h=>headers.indexOf(h);
-  const get=(row,h)=>String(row[idx(h)]||'').trim();
+  const headers=rows[0].map(h=>normStr(String(h||'').trim()));
+  const findH=(...opts)=>{for(const o of opts){const i=headers.indexOf(normStr(o));if(i>=0)return i;}return -1;};
+  const iPlaca = findH('PLACA');
+  const iData  = findH('DATA');
+  const iKm    = findH('KM_ATUAL','KM ATUAL','KM');
+  const iLit   = findH('LITROS');
+  const iVal   = findH('VALOR_TOTAL','VALOR TOTAL','VALOR');
+  const iTipo  = findH('TIPO_COMBUSTIVEL','TIPO COMBUSTIVEL','TIPO');
+  const iPosto = findH('POSTO');
+  const get=(row,i)=>i>=0?String(row[i]??'').trim():'';
   impCData=[];
   for(let i=1;i<rows.length;i++){
-    const row=rows[i];if(row.every(c=>!c))continue;
-    const placa=get(row,'PLACA').toUpperCase();
-    const data=parseBRDate(get(row,'DATA'));
-    const km=parseInt(get(row,'KM_ATUAL'))||0;
-    const litros=parseBRNum(get(row,'LITROS'));
-    const valor=parseBRNum(get(row,'VALOR_TOTAL'));
+    const row=rows[i];
+    if(row.every(c=>!String(c||'').trim()))continue;
+    const placa=get(row,iPlaca).toUpperCase().replace(/\s/g,'');
+    const data=parseBRDate(get(row,iData));
+    const km=parseInt(String(get(row,iKm)).replace(/\./g,'').replace(',','.'))||0;
+    const litros=parseBRNum(row[iLit]);
+    const valor=parseBRNum(row[iVal]);
     const errs=[];
     const veiculo=C.v.find(x=>x.placa===placa);
     if(!placa) errs.push('Placa vazia');
     else if(!veiculo) errs.push(`Placa "${placa}" não cadastrada`);
-    if(!data) errs.push('Data inválida');
-    if(!km) errs.push('KM inválido');
-    if(!litros||isNaN(litros)) errs.push('Litros inválido');
-    if(!valor||isNaN(valor)) errs.push('Valor inválido');
+    if(!data) errs.push('Data inválida (use dd/mm/aaaa)');
+    if(!km)   errs.push('KM inválido');
+    if(!litros||isNaN(litros)) errs.push(`Litros inválido (${row[iLit]})`);
+    if(!valor||isNaN(valor))   errs.push(`Valor inválido (${row[iVal]})`);
     impCData.push({
-      linha:i+1,placa,data,km,litros,valor,
-      tipo_combustivel:get(row,'TIPO_COMBUSTIVEL')||'Gasolina',
-      posto:get(row,'POSTO'),
+      linha:i+1,placa,data,km,
+      litros:isNaN(litros)?0:litros,
+      valor:isNaN(valor)?0:valor,
+      tipo_combustivel:get(row,iTipo)||'Gasolina',
+      posto:get(row,iPosto),
       veiculo_id:veiculo?.id||null,
       erros:errs,ok:errs.length===0
     });
@@ -310,7 +342,19 @@ export function processarPlanilhaCombustivel(rows){
   document.getElementById('imp-c-sum').style.display='flex';
   document.getElementById('imp-c-sum').innerHTML=`<div class="imp-chip ok">✅ ${ok} prontos</div><div class="imp-chip er">❌ ${er} com erro</div>`;
   document.getElementById('imp-c-btn').textContent=`🚀 Importar ${ok} Abastecimentos`;
-  document.getElementById('imp-c-table').innerHTML=`<table><thead><tr><th>#</th><th>Placa</th><th>Data</th><th>KM</th><th>Litros</th><th>Valor</th><th>Tipo</th><th>Status</th></tr></thead><tbody>${impCData.map(r=>`<tr class="${r.ok?'row-ok':'row-err'}"><td>${r.linha}</td><td><strong>${r.placa}</strong></td><td>${window.fd(r.data)}</td><td>${r.km}</td><td>${r.litros}</td><td>R$ ${r.valor}</td><td>${r.tipo_combustivel}</td><td>${r.ok?`<span class="badge b-gr">✅ OK</span>`:`<span class="err-cell">❌ ${r.erros.join(', ')}</span>`}</td></tr>`).join('')}</tbody></table>`;
+  document.getElementById('imp-c-table').innerHTML=`<table><thead><tr>
+    <th>#</th><th>Placa</th><th>Data</th><th>KM Atual</th><th>Litros</th><th>Valor Total</th><th>Tipo</th><th>Posto</th><th>Status</th>
+  </tr></thead><tbody>${impCData.map(r=>`<tr class="${r.ok?'row-ok':'row-err'}">
+    <td>${r.linha}</td>
+    <td><strong>${r.placa}</strong></td>
+    <td>${window.fd(r.data)}</td>
+    <td>${r.km.toLocaleString('pt-BR')}</td>
+    <td><strong>${r.litros.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:3})}</strong></td>
+    <td>R$ ${r.valor.toLocaleString('pt-BR',{minimumFractionDigits:2})}</td>
+    <td>${r.tipo_combustivel}</td>
+    <td>${r.posto||'—'}</td>
+    <td>${r.ok?`<span class="badge b-gr">✅ OK</span>`:`<span class="err-cell">❌ ${r.erros.join(', ')}</span>`}</td>
+  </tr>`).join('')}</tbody></table>`;
 }
 
 export async function importarCombustivel(){
