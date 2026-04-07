@@ -1,7 +1,6 @@
 import { C, SESSION } from './state.js';
 import { now, gCT, slog, toast, lov } from './utils.js';
-import { FB } from './api.js';
-import { supabase } from './config.js';
+import { FB, sbReq } from './api.js';
 
 let _eu = null;
 let _senhaUid = null;
@@ -96,32 +95,25 @@ export async function salvarU() {
   lov(true, _eu ? 'Atualizando usuário...' : 'Criando usuário...');
   try {
     if (_eu) {
-      // Edição — atualiza apenas o perfil na tabela usuarios
+      // Edição — atualiza perfil na tabela usuarios
       await FB.upd('usuarios', _eu.id, p);
       slog(`Usuário editado: ${nome}`);
+      toast('✅ Usuário atualizado!');
     } else {
-      // Novo usuário — cria no Supabase Auth primeiro
-      const { data: authData, error: authError } = await supabase.auth.signUp({
-        email,
-        password: s,
-        options: { data: { nome, perfil: p.perfil } }
-      });
-
-      if (authError) throw new Error('Erro no Auth: ' + authError.message);
-
-      // Insere na tabela usuarios (o trigger handle_new_auth_user vai preencher auth_id)
-      await FB.add('usuarios', { ...p, data_criacao: now() });
-      slog(`Usuário criado: ${nome}`);
-
-      // Aviso sobre confirmação de e-mail
-      if (authData?.user && !authData?.session) {
-        toast(`✅ Usuário criado! Um e-mail de confirmação foi enviado para ${email}.`, 'i');
+      // Novo usuário — insere direto na tabela (login via modo legado)
+      // Evita rate limit do Supabase Auth (signUp só permite 1 por vez a cada 18s)
+      const jaExiste = await sbReq('GET','usuarios',null,`email=eq.${encodeURIComponent(email)}&select=id`);
+      if(jaExiste && jaExiste.length > 0){
+        toast(`🚫 E-mail ${email} já está cadastrado!`,'e');
+        return;
       }
+      await FB.add('usuarios', { ...p, senha: s, data_criacao: now() });
+      slog(`Usuário criado: ${nome}`);
+      toast(`✅ Usuário ${nome} criado com sucesso!`);
     }
     await window.loadAll();
     window.cMo('mo-u');
     renderU();
-    if (_eu) toast('✅ Usuário atualizado!');
   } catch (e) {
     toast('Erro: ' + e.message, 'e');
   } finally {
