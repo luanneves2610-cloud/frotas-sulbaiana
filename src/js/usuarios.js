@@ -149,28 +149,12 @@ export async function salvarNovaSenha() {
 
   lov(true, 'Redefinindo senha...');
   try {
-    if (u?.auth_id) {
-      // Usuário Supabase Auth — envia e-mail de redefinição
-      const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: window.location.origin
-      });
-      if (error) throw new Error(error.message);
-      window.cMo('mo-senha');
-      toast(`📧 E-mail de redefinição enviado para ${email}`, 'i');
-    } else {
-      // Usuário legado — atualiza senha diretamente na tabela
-      await FB.upd('usuarios', _senhaUid, { senha: nova });
-
-      // Tenta criar/atualizar no Supabase Auth para migrar o usuário
-      if (email) {
-        await supabase.auth.signUp({ email, password: nova });
-      }
-
-      await slog(`Senha redefinida para usuário id ${_senhaUid}`);
-      window.cMo('mo-senha');
-      toast('✅ Senha redefinida com sucesso!');
-      await window.loadAll();
-    }
+    // Atualiza senha direto na tabela (modo legado — sem dependência do Supabase Auth)
+    await FB.upd('usuarios', _senhaUid, { senha: nova });
+    await slog(`Senha redefinida para usuário id ${_senhaUid}`);
+    window.cMo('mo-senha');
+    toast('✅ Senha redefinida com sucesso!');
+    await window.loadAll();
   } catch (e) {
     toast('Erro: ' + e.message, 'e');
   } finally {
