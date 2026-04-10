@@ -72,11 +72,13 @@ input[type=date],input[type=number],input[type=month]{color-scheme:light}
 .ls{position:fixed;inset:0;background:linear-gradient(135deg,#0f172a 0%,#1e1b4b 50%,#0c1a2e 100%);display:flex;align-items:center;justify-content:center;z-index:1000;overflow:hidden}
 .ls::before{content:'';position:absolute;inset:0;background-image:radial-gradient(circle,rgba(59,130,246,.08) 1px,transparent 1px);background-size:32px 32px;pointer-events:none}
 .ls::after{content:'';position:absolute;top:-50%;left:-50%;width:200%;height:200%;background:radial-gradient(ellipse at 60% 40%,rgba(124,58,237,.12) 0%,transparent 60%),radial-gradient(ellipse at 30% 70%,rgba(37,99,235,.1) 0%,transparent 50%);pointer-events:none}
-.lc{width:100%;max-width:420px;background:rgba(255,255,255,.98);border:1px solid rgba(255,255,255,.2);border-radius:20px;padding:38px;box-shadow:0 32px 80px rgba(0,0,0,.5);position:relative;z-index:1}
+.lc{width:100%;max-width:420px;background:rgba(255,255,255,.98);border:1px solid rgba(255,255,255,.2);border-radius:20px;padding:38px;box-shadow:0 32px 80px rgba(0,0,0,.5);position:relative;z-index:1;
+  /* Força tema claro dentro do card, independente do modo escuro */
+  --s1:#f8fafc;--s2:#f1f5f9;--b1:#e2e8f0;--b2:#cbd5e1;--tx:#0f172a;--tm:#64748b;--td:#94a3b8;color-scheme:light}
 .ll{text-align:center;margin-bottom:28px}
 .ll .li{font-size:44px;margin-bottom:10px;display:block}
-.ll h1{font-family:'Space Grotesk';font-size:22px;font-weight:700;margin-bottom:4px;letter-spacing:-.02em}
-.ll p{font-size:13px;color:var(--tm)}
+.ll h1{font-family:'Space Grotesk';font-size:22px;font-weight:700;margin-bottom:4px;letter-spacing:-.02em;color:#0B1E50}
+.ll p{font-size:13px;color:#64748b}
 .lf .fgp{margin-bottom:13px}
 .lb{width:100%;padding:11px;margin-top:8px;font-size:14px;font-weight:700;justify-content:center;letter-spacing:.01em}
 .lhint{text-align:center;margin-top:12px;font-size:12px;color:var(--tm)}
