@@ -138,6 +138,7 @@
           </select>
           <button onclick="(()=>{const d=new Date();document.getElementById('dash-mes').value=String(d.getMonth()+1).padStart(2,'0');document.getElementById('dash-ano').value=d.getFullYear();if(window._semFiltro)toggleFiltroData();else renderDash();})()" style="background:var(--s2);border:1px solid var(--b2);padding:6px 12px;font-size:12px;border-radius:7px;cursor:pointer;color:var(--tm)">Mês Atual</button>
           <button id="btn-sem-filtro" onclick="toggleFiltroData()" style="background:var(--s2);border:1px solid var(--b2);padding:6px 12px;font-size:12px;border-radius:7px;cursor:pointer;color:var(--tm);transition:all .15s;display:flex;align-items:center;gap:5px">📊 Sem Filtro</button>
+          <select id="dash-ct" onchange="renderDash()" style="background:var(--s1);border:1px solid var(--b2);padding:6px 12px;font-size:13px;border-radius:7px;display:none"><option value="">Todos contratos</option></select>
         </div>
         <div class="kpi-grid" id="kpi-grid"></div>
         <!-- Charts Row -->

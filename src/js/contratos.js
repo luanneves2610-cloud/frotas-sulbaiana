@@ -1,15 +1,19 @@
-import { C } from './state.js';
+import { C, SESSION } from './state.js';
 import { cur, fd, lov, slog, now } from './utils.js';
 import { FB } from './api.js';
 
 let _ect=null;
 
 export function renderCT(){
+  const isAdmin=SESSION?.perfil==='admin';
+  // Botão "Novo Contrato" na fbar — visível apenas para admin
+  const fbarEl=document.querySelector('#contratos .fbar');
+  if(fbarEl) fbarEl.style.display=isAdmin?'':'none';
   document.getElementById('lct').textContent=C.ct.length+' contratos';
   document.getElementById('tb-ct').innerHTML=C.ct.map(ct=>{
     const ids=C.v.filter(v=>v.contrato_id===ct.id).map(v=>v.id);
     const tot=C.m.filter(m=>ids.includes(m.veiculo_id)).reduce((s,m)=>s+Number(m.valor),0)+C.a.filter(a=>ids.includes(a.veiculo_id)).reduce((s,a)=>s+Number(a.valor_total),0);
-    return`<tr><td><strong>${ct.nome_contrato}</strong><div class="fs11 t-mu">${ct.descricao||''}</div></td><td class="mono">${ct.numero_contrato||'—'}</td><td class="fs11">${fd(ct.data_inicio)}${ct.data_fim?' → '+fd(ct.data_fim):''}</td><td><span class="badge b-bl">${ids.length}</span></td><td class="t-or fw7 mono">${cur(tot)}</td><td><span class="badge ${ct.status==='ativo'?'b-gr':'b-gy'}">${ct.status}</span></td><td><div style="display:flex;gap:5px"><button class="btn btn-g btn-sm" onclick="editCT('${ct.id}')">✏️</button><button class="btn btn-g btn-sm" onclick="togCT('${ct.id}')">${ct.status==='ativo'?'🚫':'✅'}</button></div></td></tr>`;
+    return`<tr><td><strong>${ct.nome_contrato}</strong><div class="fs11 t-mu">${ct.descricao||''}</div></td><td class="mono">${ct.numero_contrato||'—'}</td><td class="fs11">${fd(ct.data_inicio)}${ct.data_fim?' → '+fd(ct.data_fim):''}</td><td><span class="badge b-bl">${ids.length}</span></td><td class="t-or fw7 mono">${cur(tot)}</td><td><span class="badge ${ct.status==='ativo'?'b-gr':'b-gy'}">${ct.status}</span></td><td>${isAdmin?`<div style="display:flex;gap:5px"><button class="btn btn-g btn-sm" onclick="editCT('${ct.id}')">✏️</button><button class="btn btn-g btn-sm" onclick="togCT('${ct.id}')">${ct.status==='ativo'?'🚫':'✅'}</button></div>`:''}</td></tr>`;
   }).join('');
 }
 

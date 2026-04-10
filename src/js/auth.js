@@ -187,11 +187,8 @@ export function setupUI() {
     document.getElementById('adm-venda-sec').style.display = 'none';
     document.getElementById('nav-vendas').style.display = 'none';
   }
-  if (isOperacional || isConsulta) {
-    document.getElementById('nav-contratos').style.display = 'none';
-    document.getElementById('nav-localidades').style.display = 'none';
-    document.getElementById('nav-centros').style.display = 'none';
-  }
+  // operacional e consulta: contratos (somente leitura), localidades e centros visíveis
+  // os próprios módulos controlam os botões de edição via SESSION.perfil
 
   const _nd = new Date();
   const _me = document.getElementById('dash-mes');
@@ -226,10 +223,14 @@ export async function loadAll() {
       FB.getAll('movimentacoes_veiculos', 'data_movimentacao.desc'),
     ]);
 
-    setC('ct', ct); setC('loc', loc); setC('cc', cc); setC('u', u);
-
     const isAdmin = SESSION?.perfil === 'admin';
     const ctFiltro = (!isAdmin && SESSION?.contrato_id) ? parseInt(SESSION.contrato_id) : null;
+
+    // Filtra centros, localidades e contratos pelo contrato do usuário (não-admin)
+    const ccFiltro  = !ctFiltro ? cc  : cc.filter(c => parseInt(c.contrato_id) == ctFiltro);
+    const locFiltro = !ctFiltro ? loc : loc.filter(l => ccFiltro.some(c => c.localidade_id == l.id));
+    const ctArr     = !ctFiltro ? ct  : ct.filter(x => parseInt(x.id) == ctFiltro);
+    setC('ct', ctArr); setC('loc', locFiltro); setC('cc', ccFiltro); setC('u', u);
     setC('v', (!ctFiltro) ? v : v.filter(x => parseInt(x.contrato_id) == ctFiltro));
     const vids = new Set(C.v.map(x => x.id));
     setC('a', (!ctFiltro) ? a : a.filter(x => vids.has(x.veiculo_id)));

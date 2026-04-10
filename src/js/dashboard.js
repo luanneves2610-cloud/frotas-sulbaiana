@@ -42,25 +42,52 @@ export function getDashMes() {
   return curMonth();
 }
 
+export function getDashCt() {
+  const el = document.getElementById('dash-ct');
+  return el?.value || null;
+}
+
 // ── Render principal ───────────────────────────────────────────────────────
 export function renderDash() {
   const mes = getDashMes(); // null = sem filtro
 
+  // Filtro de contrato — admin only
+  const isAdmin = SESSION?.perfil === 'admin';
+  const ctEl = document.getElementById('dash-ct');
+  if (ctEl) {
+    if (isAdmin) {
+      const prev = ctEl.value;
+      ctEl.innerHTML = '<option value="">Todos contratos</option>' +
+        C.ct.filter(x => x.status === 'ativo').map(c => `<option value="${c.id}">${c.nome_contrato}</option>`).join('');
+      ctEl.value = prev;
+      ctEl.style.display = '';
+    } else {
+      ctEl.style.display = 'none';
+    }
+  }
+  const ctSel = isAdmin ? getDashCt() : null;
+
+  // Arrays filtrados pelo contrato selecionado no dashboard
+  const vF   = ctSel ? C.v.filter(v => v.contrato_id == ctSel) : C.v;
+  const vIds = new Set(vF.map(v => v.id));
+  const aF   = ctSel ? C.a.filter(a => vIds.has(a.veiculo_id)) : C.a;
+  const mF   = ctSel ? C.m.filter(m => vIds.has(m.veiculo_id)) : C.m;
+
   const fA = (arr) => mes ? arr.filter(a => a.data?.startsWith(mes)) : arr;
   const fM = (arr) => mes ? arr.filter(m => m.data?.startsWith(mes)) : arr;
 
-  const tc = fA(C.a).reduce((s,a) => s + Number(a.valor_total), 0);
-  const tm = fM(C.m).reduce((s,m) => s + Number(m.valor),       0);
+  const tc = fA(aF).reduce((s,a) => s + Number(a.valor_total), 0);
+  const tm = fM(mF).reduce((s,m) => s + Number(m.valor),       0);
   const tt = tc + tm;
 
-  const ativos    = C.v.filter(v => v.status === 'ativo').length;
-  const emManut   = C.v.filter(v => v.status === 'manutenção').length;
-  const devolvidos= C.v.filter(v => v.status === 'devolvido').length;
-  const dispVenda = C.v.filter(v => v.status === 'disp. para venda').length;
-  const vendidos  = C.v.filter(v => v.status === 'vendido').length;
-  const sede      = C.v.filter(v => v.status === 'devolvido' && (v.destino_devolucao === 'sede' || !v.destino_devolucao)).length;
+  const ativos    = vF.filter(v => v.status === 'ativo').length;
+  const emManut   = vF.filter(v => v.status === 'manutenção').length;
+  const devolvidos= vF.filter(v => v.status === 'devolvido').length;
+  const dispVenda = vF.filter(v => v.status === 'disp. para venda').length;
+  const vendidos  = vF.filter(v => v.status === 'vendido').length;
+  const sede      = vF.filter(v => v.status === 'devolvido' && (v.destino_devolucao === 'sede' || !v.destino_devolucao)).length;
 
-  const ranked = [...C.v].map(v => ({...v, total: window.costV(v.id)})).sort((a,b) => b.total - a.total);
+  const ranked = [...vF].map(v => ({...v, total: window.costV(v.id)})).sort((a,b) => b.total - a.total);
   const top    = ranked[0] || {placa: '—', total: 0};
 
   const lbl = mes
@@ -69,8 +96,8 @@ export function renderDash() {
 
   document.getElementById('kpi-grid').innerHTML = `
     <div class="kpi bl"><div class="kpi-top"><div class="kpi-lbl">Total ${lbl}</div><div class="kpi-ico">💰</div></div><div class="kpi-val">${cur(tt).replace('R$ ','R$')}</div><div class="kpi-sub">Manut. + Combustível</div></div>
-    <div class="kpi or"><div class="kpi-top"><div class="kpi-lbl">Combustível</div><div class="kpi-ico">⛽</div></div><div class="kpi-val">${cur(tc).replace('R$ ','R$')}</div><div class="kpi-sub">${fA(C.a).length} abastecimentos</div></div>
-    <div class="kpi ye"><div class="kpi-top"><div class="kpi-lbl">Manutenção</div><div class="kpi-ico">🔧</div></div><div class="kpi-val">${cur(tm).replace('R$ ','R$')}</div><div class="kpi-sub">${fM(C.m).length} ordens</div></div>
+    <div class="kpi or"><div class="kpi-top"><div class="kpi-lbl">Combustível</div><div class="kpi-ico">⛽</div></div><div class="kpi-val">${cur(tc).replace('R$ ','R$')}</div><div class="kpi-sub">${fA(aF).length} abastecimentos</div></div>
+    <div class="kpi ye"><div class="kpi-top"><div class="kpi-lbl">Manutenção</div><div class="kpi-ico">🔧</div></div><div class="kpi-val">${cur(tm).replace('R$ ','R$')}</div><div class="kpi-sub">${fM(mF).length} ordens</div></div>
     <div class="kpi gr"><div class="kpi-top"><div class="kpi-lbl">Em Operação</div><div class="kpi-ico">🚗</div></div><div class="kpi-val">${ativos}</div><div class="kpi-sub">${emManut} em manutenção</div></div>
     <div class="kpi pu"><div class="kpi-top"><div class="kpi-lbl">Devolvidos/Sede</div><div class="kpi-ico">🏢</div></div><div class="kpi-val">${devolvidos}</div><div class="kpi-sub">${sede} na sede</div></div>
     <div class="kpi ye"><div class="kpi-top"><div class="kpi-lbl">Disp. para Venda</div><div class="kpi-ico">🏷️</div></div><div class="kpi-val">${dispVenda}</div><div class="kpi-sub">aguardando venda</div></div>
@@ -78,8 +105,8 @@ export function renderDash() {
     <div class="kpi or"><div class="kpi-top"><div class="kpi-lbl">Maior Custo</div><div class="kpi-ico">📍</div></div><div class="kpi-val">${top.placa}</div><div class="kpi-sub">${cur(top.total)} acumulado</div></div>`;
 
   // Frota por contrato
-  const ctKpis = C.ct.filter(x => x.status === 'ativo').map(ct => {
-    const n = C.v.filter(v => v.contrato_id == ct.id && v.status === 'ativo').length;
+  const ctKpis = (ctSel ? C.ct.filter(x => x.status==='ativo' && x.id==ctSel) : C.ct.filter(x => x.status === 'ativo')).map(ct => {
+    const n = vF.filter(v => v.contrato_id == ct.id && v.status === 'ativo').length;
     return `<div style="background:#f8fafc;border:1px solid var(--b1);border-radius:8px;padding:8px 14px;font-size:12px;display:flex;justify-content:space-between;align-items:center;min-width:160px">
       <span style="color:var(--tm);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:120px" title="${ct.nome_contrato}">${ct.nome_contrato}</span>
       <strong class="t-bl" style="font-size:14px;margin-left:8px">${n}</strong>
@@ -111,14 +138,19 @@ export function renderDash() {
 
 // ── Gráfico de linha — Evolução Mensal (Chart.js) ─────────────────────────
 export function renderChart() {
+  const ctSel = getDashCt();
+  const vIds  = ctSel ? new Set(C.v.filter(v => v.contrato_id == ctSel).map(v => v.id)) : null;
+  const aArr  = vIds ? C.a.filter(a => vIds.has(a.veiculo_id)) : C.a;
+  const mArr  = vIds ? C.m.filter(m => vIds.has(m.veiculo_id)) : C.m;
+
   const meses = [];
   for (let i = 5; i >= 0; i--) {
     const d = new Date(); d.setDate(1); d.setMonth(d.getMonth() - i);
     const mk = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
     meses.push({ key: mk, lbl: d.toLocaleDateString('pt-BR', {month:'short'}).replace('.','') });
   }
-  const bc = meses.map(m => C.a.filter(a => a.data?.startsWith(m.key)).reduce((s,a) => s + Number(a.valor_total), 0));
-  const bm = meses.map(m => C.m.filter(x => x.data?.startsWith(m.key)).reduce((s,x) => s + Number(x.valor),       0));
+  const bc = meses.map(m => aArr.filter(a => a.data?.startsWith(m.key)).reduce((s,a) => s + Number(a.valor_total), 0));
+  const bm = meses.map(m => mArr.filter(x => x.data?.startsWith(m.key)).reduce((s,x) => s + Number(x.valor),       0));
   const bt = bc.map((v,i) => v + bm[i]);
 
   const canvas = document.getElementById('canvas-evolucao');
@@ -208,7 +240,8 @@ export function renderRank(ranked) {
 // ── Por Contrato (lista + gráfico de barras) ───────────────────────────────
 export function renderDashContratos() {
   const isAdmin  = SESSION?.perfil === 'admin' || SESSION?.perfil === 'financeiro';
-  const ctFiltro = (!isAdmin && SESSION?.contrato_id) ? parseInt(SESSION.contrato_id) : null;
+  const ctSel    = SESSION?.perfil === 'admin' ? getDashCt() : null;
+  const ctFiltro = ctSel ? parseInt(ctSel) : ((!isAdmin && SESSION?.contrato_id) ? parseInt(SESSION.contrato_id) : null);
   const contratos = ctFiltro
     ? C.ct.filter(x => x.status === 'ativo' && parseInt(x.id) === ctFiltro)
     : C.ct.filter(x => x.status === 'ativo');
@@ -286,7 +319,8 @@ export function renderDashContratos() {
 // ── Ranking Top 10 Localidades por Custo ──────────────────────────────────
 export function renderDashLocalidades() {
   const isAdmin  = SESSION?.perfil === 'admin' || SESSION?.perfil === 'financeiro';
-  const ctFiltro = (!isAdmin && SESSION?.contrato_id) ? parseInt(SESSION.contrato_id) : null;
+  const ctSel    = SESSION?.perfil === 'admin' ? getDashCt() : null;
+  const ctFiltro = ctSel ? parseInt(ctSel) : ((!isAdmin && SESSION?.contrato_id) ? parseInt(SESSION.contrato_id) : null);
   const mes = getDashMes();
 
   // Calcular custo por localidade
@@ -486,6 +520,7 @@ export function resetChkBadge() { _novoChkCount = 0; _setBadge('bchk', 0); }
 
 // ── Globals ────────────────────────────────────────────────────────────────
 window.getDashMes            = getDashMes;
+window.getDashCt             = getDashCt;
 window.renderDash            = renderDash;
 window.renderChart           = renderChart;
 window.renderRank            = renderRank;

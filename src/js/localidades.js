@@ -1,10 +1,14 @@
-import { C } from './state.js';
+import { C, SESSION } from './state.js';
 import { cur, lov, slog } from './utils.js';
 import { FB } from './api.js';
 
 let _eloc=null;
 
 export function renderLoc(){
+  const isAdmin=SESSION?.perfil==='admin';
+  const canCreate=isAdmin||SESSION?.perfil==='operacional';
+  const fbarEl=document.querySelector('#localidades .fbar');
+  if(fbarEl) fbarEl.style.display=canCreate?'':'none';
   const fct=document.getElementById('floc-ct')?.value||'';
   const fb=(document.getElementById('floc-b')?.value||'').toLowerCase();
   let locs=C.loc;
@@ -13,7 +17,7 @@ export function renderLoc(){
   document.getElementById('tb-loc').innerHTML=locs.map(l=>{
     const ids=C.v.filter(v=>v.localidade_id===l.id).map(v=>v.id);
     const tot=C.m.filter(m=>ids.includes(m.veiculo_id)).reduce((s,m)=>s+Number(m.valor),0)+C.a.filter(a=>ids.includes(a.veiculo_id)).reduce((s,a)=>s+Number(a.valor_total),0);
-    return`<tr><td><strong>📍 ${l.nome_localidade}</strong></td><td>${l.cidade||'—'}</td><td>${l.estado||'—'}</td><td><span class="badge b-bl">${ids.length}</span></td><td class="t-or fw7 mono">${cur(tot)}</td><td><span class="badge ${l.status==='ativo'?'b-gr':'b-gy'}">${l.status}</span></td><td><div style="display:flex;gap:5px"><button class="btn btn-g btn-sm" onclick="editLoc('${l.id}')">✏️</button><button class="btn btn-g btn-sm" onclick="togLoc('${l.id}')">${l.status==='ativo'?'🚫':'✅'}</button><button class="btn btn-sm btn-ic" style="background:#fef2f2;color:#dc2626;border:1px solid #fecaca" onclick="delLoc('${l.id}')" title="Excluir">🗑️</button></div></td></tr>`;
+    return`<tr><td><strong>📍 ${l.nome_localidade}</strong></td><td>${l.cidade||'—'}</td><td>${l.estado||'—'}</td><td><span class="badge b-bl">${ids.length}</span></td><td class="t-or fw7 mono">${cur(tot)}</td><td><span class="badge ${l.status==='ativo'?'b-gr':'b-gy'}">${l.status}</span></td><td>${isAdmin?`<div style="display:flex;gap:5px"><button class="btn btn-g btn-sm" onclick="editLoc('${l.id}')">✏️</button><button class="btn btn-g btn-sm" onclick="togLoc('${l.id}')">${l.status==='ativo'?'🚫':'✅'}</button><button class="btn btn-sm btn-ic" style="background:#fef2f2;color:#dc2626;border:1px solid #fecaca" onclick="delLoc('${l.id}')" title="Excluir">🗑️</button></div>`:''}</td></tr>`;
   }).join('')||'<tr><td colspan="7" style="text-align:center;padding:24px;color:var(--tm)">Nenhuma localidade encontrada</td></tr>';
   const el=document.getElementById('floc-ct');
   if(el){const v=el.value;el.innerHTML='<option value="">Todos contratos</option>';C.ct.forEach(c=>{el.innerHTML+=`<option value="${c.id}">${c.nome_contrato}</option>`;});el.value=v;}
