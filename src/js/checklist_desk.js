@@ -90,7 +90,7 @@ export async function renderChecklist_desk(){
       <td><span class="badge ${stColor[x.status]||'b-gy'}">${x.status}</span></td>
       <td><div style="display:flex;gap:4px">
         ${x.status==='pendente'||x.status==='em_andamento'?`<button class="btn btn-g btn-sm btn-ic" onclick="copiarLinkExec('${x.token}')" title="Copiar link">🔗</button><button class="btn btn-g btn-sm btn-ic" onclick="mostrarQR('${x.token}')" title="QR Code">📱</button>`:''}
-        ${x.status==='concluido'?`<button class="btn btn-g btn-sm btn-ic" onclick="verDetalhesChk(${x.id})" title="Ver detalhes">👁️</button>`:''}
+        ${(x.status==='concluido'||x.score!=null)?`<button class="btn btn-g btn-sm btn-ic" onclick="verDetalhesChk(${x.id})" title="Ver detalhes">👁️</button>`:''}
         <button class="btn btn-sm btn-ic" style="background:#fef2f2;color:#dc2626;border:1px solid #fecaca" onclick="excluirChk(${x.id},'${v.placa||'?'}')" title="Excluir">🗑️</button>
       </div></td>
     </tr>`;

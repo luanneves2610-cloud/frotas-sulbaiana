@@ -169,7 +169,11 @@ async function init(){
     EXEC=execs[0];
     if(EXEC.status==='concluido')return renderEstado('Já concluído','Este check-list já foi preenchido com sucesso. Obrigado!','ok');
     if(EXEC.status==='expirado'||(EXEC.expira_em&&new Date(EXEC.expira_em)<new Date())){
-      if(EXEC.status!=='expirado')await sbPatch('checklist_execucoes',EXEC.id,{status:'expirado'});
+      // Nunca sobrescreve 'concluido' com 'expirado' — protege check-lists já finalizados
+      if(EXEC.status!=='expirado'&&EXEC.status!=='concluido'){
+        await sbPatch('checklist_execucoes',EXEC.id,{status:'expirado'});
+      }
+      if(EXEC.status==='concluido')return renderEstado('Já concluído','Este check-list já foi preenchido com sucesso. Obrigado!','ok');
       return renderEstado('Link expirado','Este link expirou. Solicite um novo ao responsável.','warning');
     }
     const tipoVeiculo=EXEC.tipo_veiculo||'carro';
