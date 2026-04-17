@@ -87,7 +87,7 @@ export function renderDash() {
   const vendidos  = vF.filter(v => v.status === 'vendido').length;
   const sede      = vF.filter(v => v.status === 'devolvido' && (v.destino_devolucao === 'sede' || !v.destino_devolucao)).length;
 
-  const ranked = [...vF].map(v => ({...v, total: window.costV(v.id)})).sort((a,b) => b.total - a.total);
+  const ranked = [...vF].filter(v => v.status === 'ativo').map(v => ({...v, total: window.costV(v.id)})).sort((a,b) => b.total - a.total);
   const top    = ranked[0] || {placa: '—', total: 0};
 
   const lbl = mes
@@ -218,7 +218,7 @@ function _renderDonut(tc, tm) {
 // ── Ranking ────────────────────────────────────────────────────────────────
 export function renderRank(ranked) {
   const medalColors = ['#f59e0b','#94a3b8','#cd7c2f'];
-  document.getElementById('rank-list').innerHTML = ranked.slice(0,6).map((v,i) => {
+  document.getElementById('rank-list').innerHTML = ranked.slice(0,10).map((v,i) => {
     const pct = (v.total / (ranked[0]?.total || 1) * 100).toFixed(0);
     const barColor = i===0?'#f59e0b':i===1?'#3b82f6':i===2?'#10b981':'#6366f1';
     return `<div style="padding:10px 0;border-bottom:1px solid var(--b1);display:flex;align-items:center;gap:12px">

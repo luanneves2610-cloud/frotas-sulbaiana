@@ -153,6 +153,8 @@ async function sbPatch(t,id,d){const r=await fetch(SB_URL+'/rest/v1/'+t+'?id=eq.
 let EXEC=null,VEICULO=null,ITENS=[],RESPOSTAS={},FOTOS_ITEM={};
 let FOTOS_GERAIS={frente:null,traseira:null,lateral_esq:null,lateral_dir:null};
 let KM_CONFIRMADO=null;
+let OBS_ITEM={};   // observações por item (quando marcado NÃO)
+let OBS_FINAL='';  // observação geral ao final do check-list
 
 function getToken(){return new URLSearchParams(window.location.search).get('t');}
 function render(h){document.getElementById('app').innerHTML=h;document.querySelectorAll('.bottom-bar').forEach(b=>b.remove());}
@@ -329,6 +331,10 @@ function renderChecklist(){
           <div class="foto-grid" id="fotos-${item.id}">${fotos.map(f=>'<img class="foto-thumb" src="'+f.data+'">').join('')}</div>
           <input type="file" accept="image/*" capture="environment" id="finput-${item.id}" onchange="capturaFotoItem(${item.id},this)">
           <button class="btn-camera" onclick="document.getElementById('finput-${item.id}').click()">📷 ${fotos.length?'Adicionar mais':'Tirar foto (obrigatório)'}</button>
+          <div style="margin-top:10px">
+            <div style="font-size:11px;color:var(--red);font-weight:600;margin-bottom:4px">✏️ Descrever o problema (opcional)</div>
+            <textarea style="width:100%;border:2px solid rgba(220,38,38,.25);border-radius:8px;padding:8px 10px;font-size:13px;resize:none;height:60px;font-family:inherit;color:var(--text);background:#fff9f9" placeholder="Descreva o problema encontrado..." oninput="OBS_ITEM[${item.id}]=this.value">${OBS_ITEM[item.id]||''}</textarea>
+          </div>
         </div>`:''}
       </div>`;
     });
@@ -404,6 +410,11 @@ function renderFotosGerais(){
       <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:8px">${extras.map(f=>'<img src="'+f.data+'" style="width:64px;height:64px;border-radius:8px;object-fit:cover;border:2px solid var(--border)">').join('')}</div>
       <input type="file" id="fextra" accept="image/*" capture="environment" multiple onchange="capturaExtras(this)">
       <button class="btn-camera" onclick="document.getElementById('fextra').click()">📷 Adicionar fotos extras</button>
+    </div>
+    <div class="fotos-card">
+      <div class="fotos-card-title">📝 Observações Finais</div>
+      <div class="fotos-card-sub">Registre observações gerais sobre o estado do veículo (opcional).</div>
+      <textarea style="width:100%;border:2px solid var(--border);border-radius:10px;padding:10px 12px;font-size:14px;resize:none;height:90px;font-family:inherit;color:var(--text);background:var(--gray-light);margin-top:2px" placeholder="Ex: Arranhado na lateral direita, pneu dianteiro com baixa pressão..." oninput="OBS_FINAL=this.value">${OBS_FINAL||''}</textarea>
     </div>
   </div>`;
   render(html);
@@ -698,7 +709,7 @@ async function _enviarChecklist(){
   let lat=null,lng=null;
   try{const pos=await new Promise((res,rej)=>navigator.geolocation.getCurrentPosition(res,rej,{timeout:5000}));lat=pos.coords.latitude;lng=pos.coords.longitude;}catch(e){}
 
-  await sbPatch('checklist_execucoes',EXEC.id,{status:'concluido',score,classificacao:cls,fim_em:new Date().toISOString(),latitude:lat,longitude:lng,km_veiculo:KM_CONFIRMADO||EXEC.km_veiculo});
+  await sbPatch('checklist_execucoes',EXEC.id,{status:'concluido',score,classificacao:cls,fim_em:new Date().toISOString(),latitude:lat,longitude:lng,km_veiculo:KM_CONFIRMADO||EXEC.km_veiculo,observacoes_finais:OBS_FINAL||null});
 
   const totalFotos=Object.values(FOTOS_ITEM).reduce((s,a)=>s+a.length,0)
     +['frente','traseira','lateral_esq','lateral_dir'].filter(k=>FOTOS_GERAIS[k]).length
@@ -709,7 +720,7 @@ async function _enviarChecklist(){
 
   for(const item of ITENS){
     const resp=RESPOSTAS[item.id]||'N/A';
-    const[rd]=await sbPost('checklist_respostas',{execucao_id:EXEC.id,item_id:item.id,resposta:resp});
+    const[rd]=await sbPost('checklist_respostas',{execucao_id:EXEC.id,item_id:item.id,resposta:resp,observacao:OBS_ITEM[item.id]||null});
     for(const f of(FOTOS_ITEM[item.id]||[])){
       progresso();
       const path=`${EXEC.id}/item_${rd.id}_${Date.now()}.jpg`;

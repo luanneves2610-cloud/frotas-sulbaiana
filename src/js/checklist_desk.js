@@ -22,6 +22,17 @@ export async function renderChecklist_desk(){
     return;
   }
 
+  // Controle de acesso: operacional/consulta vê apenas check-lists do seu contrato
+  const isAdminOrFin = SESSION?.perfil === 'admin' || SESSION?.perfil === 'financeiro';
+  if(!isAdminOrFin && SESSION?.contrato_id){
+    // C.v já foi filtrado pelo contrato no loadAll()
+    const vidsContrato = new Set(C.v.map(v => v.id));
+    _chkExecs = _chkExecs.filter(x => vidsContrato.has(x.veiculo_id));
+  }
+  // Oculta filtro de contrato para não-admins (já escopo único)
+  const selCtEl = document.getElementById('fchk-ct');
+  if(selCtEl) selCtEl.style.display = isAdminOrFin ? '' : 'none';
+
   const selCt=document.getElementById('fchk-ct');
   if(selCt){ const v=selCt.value; selCt.innerHTML='<option value="">Todos os contratos</option>'; C.ct.forEach(x=>{selCt.innerHTML+=`<option value="${x.id}">${x.nome_contrato}</option>`;}); selCt.value=v; }
 
@@ -237,6 +248,7 @@ export async function verDetalhesChk(execId){
             <div style="font-size:13px;font-weight:500;flex:1">${r.checklist_itens?.descricao||'—'}</div>
             <span style="font-size:12px;font-weight:700;color:${cor};margin-left:10px;white-space:nowrap">${r.resposta==='OK'?'✅ OK':r.resposta==='NÃO'?'❌ NÃO':'➖ N/A'}</span>
           </div>
+          ${r.observacao?`<div style="font-size:12px;color:#991b1b;margin-top:5px;padding:5px 8px;background:rgba(220,38,38,.07);border-radius:6px">✏️ ${r.observacao}</div>`:''}
           ${fotosR.length?`<div style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap">${fotosR.map(f=>{const src=f.url||f.dados_base64||'';return`<img src="${src}" style="width:60px;height:60px;border-radius:6px;object-fit:cover;border:2px solid #fca5a5" onclick="verFotoGrande('${src}')" loading="lazy">`;}).join('')}</div>`:''}
         </div>`;
       });
@@ -254,6 +266,12 @@ export async function verDetalhesChk(execId){
             </div>`;
           }).join('')}
         </div>
+      </div>`;
+    }
+    if(ex.observacoes_finais){
+      html+=`<div style="background:#fffbeb;border:1px solid #fde68a;border-radius:10px;padding:12px 14px;margin-top:14px">
+        <div style="font-size:11px;font-weight:700;color:#b45309;margin-bottom:4px">📝 Observações Finais</div>
+        <div style="font-size:13px;color:#78350f;line-height:1.5">${ex.observacoes_finais}</div>
       </div>`;
     }
     document.getElementById('chk-det-title').textContent=`📋 Check-list — ${v.placa} — ${ex.score||0}%`;
