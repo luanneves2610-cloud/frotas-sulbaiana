@@ -30,6 +30,7 @@ export function renderU() {
         ${isAdmin ? `<button class="btn btn-g btn-sm" onclick="editU('${u.id}')">✏️</button>
         <button class="btn btn-g btn-sm" onclick="togU('${u.id}')">${u.status === 'ativo' ? '🚫' : '✅'}</button>` : ''}
         <button class="btn btn-sm btn-ic" onclick="abrirTrocaSenha('${u.id}','${u.nome}','${u.email}')" title="${isAdmin ? 'Redefinir senha' : 'Alterar minha senha'}" style="background:#fefce8;border:1px solid #fde68a;color:#b45309">🔑</button>
+        ${isAdmin && u.id != SESSION?.id ? `<button class="btn btn-sm btn-ic" onclick="delU('${u.id}','${u.nome}')" title="Excluir usuário" style="background:#fef2f2;color:#dc2626;border:1px solid #fecaca">🗑️</button>` : ''}
       </div></td>
     </tr>`;
   }).join('') || `<tr><td colspan="6" style="text-align:center;padding:32px;color:var(--tm)">Nenhum usuário encontrado</td></tr>`;
@@ -178,6 +179,23 @@ export async function togU(id) {
   }
 }
 
+export async function delU(id, nome) {
+  if (id == SESSION?.id) { toast('Não é possível excluir seu próprio usuário!', 'e'); return; }
+  if (!confirm(`Excluir o usuário "${nome}"?\nEsta ação é irreversível.`)) return;
+  lov(true, 'Excluindo usuário...');
+  try {
+    await FB.del('usuarios', id);
+    await slog(`Usuário excluído: ${nome}`);
+    await window.loadAll();
+    renderU();
+    toast('✅ Usuário excluído!');
+  } catch (e) {
+    toast('Erro ao excluir: ' + e.message, 'e');
+  } finally {
+    lov(false);
+  }
+}
+
 export function onMuPerfil() {
   const p = document.getElementById('mu-p').value;
   const box = document.getElementById('mu-ct-box');
@@ -193,4 +211,5 @@ window.salvarU = salvarU;
 window.abrirTrocaSenha = abrirTrocaSenha;
 window.salvarNovaSenha = salvarNovaSenha;
 window.togU = togU;
+window.delU = delU;
 window.onMuPerfil = onMuPerfil;
