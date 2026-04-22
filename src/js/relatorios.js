@@ -33,17 +33,19 @@ export function filtrarDados(tipo){
     return true;
   };
   let veics=C.v;
-  if(f.ct) veics=veics.filter(v=>v.contrato_id==f.ct);
-  if(f.loc) veics=veics.filter(v=>v.localidade_id==f.loc);
-  const vids=new Set(veics.map(v=>v.id));
+  if(f.ct) veics=veics.filter(v=>String(v.contrato_id)===String(f.ct));
+  if(f.loc) veics=veics.filter(v=>String(v.localidade_id)===String(f.loc));
+  const vids=new Set(veics.map(v=>String(v.id)));
 
-  let abast=C.a.filter(a=>vids.has(a.veiculo_id));
-  let manut=C.m.filter(m=>vids.has(m.veiculo_id));
+  let abast=C.a.filter(a=>vids.has(String(a.veiculo_id)));
+  let manut=C.m.filter(m=>vids.has(String(m.veiculo_id)));
+  let multas=(C.mt||[]).filter(m=>m.veiculo_id!=null&&vids.has(String(m.veiculo_id)));
   if(f.di||f.df){
     abast=abast.filter(a=>dentroData(a.data));
     manut=manut.filter(m=>dentroData(m.data));
+    multas=multas.filter(m=>dentroData(m.data_infracao));
   }
-  return{veics,vids,abast,manut};
+  return{veics,vids,abast,manut,multas};
 }
 
 export function renderRelCards(){
@@ -182,10 +184,10 @@ export function previewRel(tipo){
     🔍 Filtros: ${f.di?'De '+fd(f.di)+' ':''} ${f.df?'até '+fd(f.df)+' ':''} ${f.ct?'| Contrato: '+gCT(f.ct).nome_contrato+' ':''} ${f.loc?'| Localidade: '+gLoc(f.loc).nome_localidade:''}
   </div>`:'';
 
-  const tbl=`${filtroInfo}<table style="width:100%;border-collapse:collapse;min-width:600px">
+  const tbl=`${filtroInfo}<div style="overflow-x:auto;-webkit-overflow-scrolling:touch"><table style="border-collapse:collapse;min-width:600px;width:max-content">
     <thead><tr>${headers.map(h=>`<th style="background:#1e3a8a;color:#fff;padding:8px 10px;text-align:left;font-size:11px;white-space:nowrap">${h}</th>`).join('')}</tr></thead>
     <tbody>${rows.map((r,i)=>`<tr style="background:${i%2?'#f8fafc':'#fff'}">${r.map(c=>`<td style="padding:7px 10px;border-bottom:1px solid #e2e8f0;font-size:12px;white-space:nowrap">${c}</td>`).join('')}</tr>`).join('')}</tbody>
-  </table><div style="margin-top:8px;font-size:11px;color:#94a3b8">${rows.length} registros | Gerado em ${dt}</div>`;
+  </table></div><div style="margin-top:8px;font-size:11px;color:#94a3b8">${rows.length} registros | Gerado em ${dt}</div>`;
 
   document.getElementById('rel-prev-title').textContent=`${rel?.icon||'📋'} ${rel?.title||tipo} — Pré-visualização`;
   document.getElementById('rel-prev-body').innerHTML=tbl;
@@ -229,12 +231,12 @@ export function filtrarGraf(){
   const f=getFiltrosGraf();
   const dentroData=d=>{if(!d)return false;if(f.di&&d<f.di)return false;if(f.df&&d>f.df)return false;return true;};
   let veics=C.v;
-  if(f.ct) veics=veics.filter(v=>v.contrato_id==f.ct);
-  if(f.loc) veics=veics.filter(v=>v.localidade_id==f.loc);
-  const vids=new Set(veics.map(v=>v.id));
-  let abast=C.a.filter(a=>vids.has(a.veiculo_id));
-  let manut=C.m.filter(m=>vids.has(m.veiculo_id));
-  let multas=(C.mt||[]).filter(m=>vids.has(m.veiculo_id));
+  if(f.ct) veics=veics.filter(v=>String(v.contrato_id)===String(f.ct));
+  if(f.loc) veics=veics.filter(v=>String(v.localidade_id)===String(f.loc));
+  const vids=new Set(veics.map(v=>String(v.id)));
+  let abast=C.a.filter(a=>vids.has(String(a.veiculo_id)));
+  let manut=C.m.filter(m=>vids.has(String(m.veiculo_id)));
+  let multas=(C.mt||[]).filter(m=>m.veiculo_id!=null&&vids.has(String(m.veiculo_id)));
   if(f.di||f.df){
     abast=abast.filter(a=>dentroData(a.data));
     manut=manut.filter(m=>dentroData(m.data));
@@ -347,8 +349,8 @@ export function renderGraficos(){
 
   // 1. Por Contrato — barras horizontais
   const byCt=C.ct.map(ct=>{
-    const ids=new Set(veics.filter(v=>v.contrato_id==ct.id).map(v=>v.id));
-    return{lbl:ct.nome_contrato,val:records.filter(r=>ids.has(getVid(r))).reduce((s,r)=>s+getVal(r),0)};
+    const ids=new Set(veics.filter(v=>String(v.contrato_id)===String(ct.id)).map(v=>String(v.id)));
+    return{lbl:ct.nome_contrato,val:records.filter(r=>ids.has(String(getVid(r)))).reduce((s,r)=>s+getVal(r),0)};
   }).filter(d=>d.val>0).sort((a,b)=>b.val-a.val);
 
   if(byCt.length){
@@ -364,8 +366,8 @@ export function renderGraficos(){
 
   // 2. Por Localidade — barras horizontais
   const byLoc=C.loc.map(l=>{
-    const ids=new Set(veics.filter(v=>v.localidade_id==l.id).map(v=>v.id));
-    return{lbl:l.nome_localidade,val:records.filter(r=>ids.has(getVid(r))).reduce((s,r)=>s+getVal(r),0)};
+    const ids=new Set(veics.filter(v=>String(v.localidade_id)===String(l.id)).map(v=>String(v.id)));
+    return{lbl:l.nome_localidade,val:records.filter(r=>ids.has(String(getVid(r)))).reduce((s,r)=>s+getVal(r),0)};
   }).filter(d=>d.val>0).sort((a,b)=>b.val-a.val);
 
   if(byLoc.length){
