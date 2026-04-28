@@ -3,6 +3,7 @@ import { cur, fd, lov, slog, now } from './utils.js';
 import { FB } from './api.js';
 
 let _em=null;
+let _saving=false;
 
 export function renderM(){
   window.populateSel();
@@ -47,7 +48,15 @@ export function editM(id){
     document.getElementById('mm-vi-loc').textContent=v.localidades?.nome_localidade||window.gLoc(v.localidade_id).nome_localidade;
     document.getElementById('mm-veiculo-info').style.display='block';
   }
-  document.getElementById('mm-tip').value=_em.tipo_servico;
+  const tipoRaw=_em.tipo_servico||'';
+  const sepIdx=tipoRaw.lastIndexOf(' — ');
+  const tipoBase=sepIdx>=0?tipoRaw.substring(0,sepIdx):tipoRaw;
+  const ladoVal=sepIdx>=0?tipoRaw.substring(sepIdx+3):null;
+  document.getElementById('mm-tip').value=tipoBase;
+  const tiposComLado=['Suspensão Dianteira','Suspensão Traseira','Sistema de Freio Dianteiro','Sistema de Freio Traseiro','Pneu','Alinhamento'];
+  const lb=document.getElementById('mm-lado-box');
+  lb.style.display=(v&&v.tipo==='CARRO'&&tiposComLado.includes(tipoBase)&&ladoVal)?'block':'none';
+  if(ladoVal)document.getElementById('mm-lado').value=ladoVal;
   document.getElementById('mm-data').value=_em.data;
   document.getElementById('mm-km').value=_em.km||'';
   document.getElementById('mm-val').value=_em.valor;
@@ -58,7 +67,9 @@ export function editM(id){
 }
 
 export async function salvarM(){
-  const vid=document.getElementById('mm-v').value;
+  if(_saving)return;
+  let vid=document.getElementById('mm-v').value;
+  if(!vid&&_em)vid=String(_em.veiculo_id);
   const val=parseFloat(document.getElementById('mm-val').value);
   const km=parseInt(document.getElementById('mm-km').value);
   if(!vid){window.toast('Selecione um veículo pela placa!','e');return;}
@@ -67,7 +78,18 @@ export async function salvarM(){
   const nf=document.getElementById('mm-nf').files[0];
   const _lado=document.getElementById('mm-lado-box').style.display!=='none'?document.getElementById('mm-lado').value:null;
   const p={veiculo_id:vid,tipo_servico:document.getElementById('mm-tip').value+((_lado)?` — ${_lado}`:''),descricao:document.getElementById('mm-desc').value,data:document.getElementById('mm-data').value,km:km,valor:val,centro_custo_id:document.getElementById('mm-cc').value||C.v.find(x=>x.id==vid)?.centro_custo_id||'',nf:nf?nf.name:(_em?.nf||''),usuario_id:SESSION.id,data_lancamento:now()};
-  lov(true);try{if(_em)await FB.upd('manutencoes',_em.id,p);else await FB.add('manutencoes',p);slog(`OS: ${window.gV(vid).placa} — ${cur(val)}`);await window.loadAll();window.cMo('mo-m');renderM();window.toast('✅ OS salva!');}catch(e){window.toast('Erro: '+e.message,'e');}finally{lov(false);}
+  _saving=true;lov(true);
+  try{
+    if(_em)await FB.upd('manutencoes',_em.id,p);
+    else await FB.add('manutencoes',p);
+    slog(`OS: ${window.gV(vid).placa} — ${cur(val)}`);
+    await window.loadAll();
+    _em=null;
+    window.cMo('mo-m');
+    renderM();
+    window.toast('✅ OS salva!');
+  }catch(e){window.toast('Erro: '+e.message,'e');}
+  finally{lov(false);_saving=false;}
 }
 
 export function onTipoManutChange(){

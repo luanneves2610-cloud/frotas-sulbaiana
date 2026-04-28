@@ -236,12 +236,12 @@ export function limparImpV(){
 }
 
 export function baixarModeloCombustivel(){
-  // Colunas na mesma ordem do Relatório de Combustível
+  // Colunas: KM_INICIAL = odômetro antes de abastecer, KM_FINAL = odômetro após
   const rows = [
-    ['PLACA','DATA','KM_ATUAL','LITROS','VALOR_TOTAL','TIPO_COMBUSTIVEL','POSTO'],
-    ['OLA5934','30/03/2026',95655,49.61,347.04,'Gasolina','Auto Posto Alagoinhas'],
-    ['SKJ1H29','25/01/2026',24500,35.50,245.80,'Gasolina','Auto Posto Central'],
-    ['ABC1D23','26/01/2026',18200,28.00,193.60,'Etanol','Posto BR'],
+    ['PLACA','DATA','KM_INICIAL','KM_FINAL','LITROS','VALOR_TOTAL','TIPO_COMBUSTIVEL','POSTO'],
+    ['OLA5934','30/03/2026',95000,95655,49.61,347.04,'Gasolina','Auto Posto Alagoinhas'],
+    ['SKJ1H29','25/01/2026',24100,24500,35.50,245.80,'Gasolina','Auto Posto Central'],
+    ['ABC1D23','26/01/2026',17900,18200,28.00,193.60,'Etanol','Posto BR'],
   ];
   window.gerarExcelSimples('Modelo_Importacao_Combustivel', rows);
   toast('✅ Modelo baixado! Use sempre o formato .xlsx para evitar erros com decimais.','i');
@@ -301,33 +301,44 @@ export function processarPlanilhaCombustivel(rows){
   if(rows.length<2){toast('Planilha vazia!','e');return;}
   const headers=rows[0].map(h=>normStr(String(h||'').trim()));
   const findH=(...opts)=>{for(const o of opts){const i=headers.indexOf(normStr(o));if(i>=0)return i;}return -1;};
-  const iPlaca = findH('PLACA');
-  const iData  = findH('DATA');
-  const iKm    = findH('KM_ATUAL','KM ATUAL','KM');
-  const iLit   = findH('LITROS');
-  const iVal   = findH('VALOR_TOTAL','VALOR TOTAL','VALOR');
-  const iTipo  = findH('TIPO_COMBUSTIVEL','TIPO COMBUSTIVEL','TIPO');
-  const iPosto = findH('POSTO');
+  const iPlaca  = findH('PLACA');
+  const iData   = findH('DATA');
+  const iKmIni  = findH('KM_INICIAL','KM INICIAL','KM_INI');
+  const iKmFin  = findH('KM_FINAL','KM FINAL','KM_FIN');
+  // Backward compat: planilhas antigas só têm KM_ATUAL
+  const iKmAtu  = findH('KM_ATUAL','KM ATUAL','KM');
+  const iLit    = findH('LITROS');
+  const iVal    = findH('VALOR_TOTAL','VALOR TOTAL','VALOR');
+  const iTipo   = findH('TIPO_COMBUSTIVEL','TIPO COMBUSTIVEL','TIPO');
+  const iPosto  = findH('POSTO');
+  // Coluna efetiva para KM final/atual (novo formato ou legado)
+  const iKmEfet = iKmFin>=0 ? iKmFin : iKmAtu;
+  const hasNovoFmt = iKmIni>=0 && iKmFin>=0;
   const get=(row,i)=>i>=0?String(row[i]??'').trim():'';
+  const parseKm=s=>parseInt(String(s).replace(/\./g,'').replace(',','.'))||0;
   impCData=[];
   for(let i=1;i<rows.length;i++){
     const row=rows[i];
     if(row.every(c=>!String(c||'').trim()))continue;
     const placa=get(row,iPlaca).toUpperCase().replace(/\s/g,'');
     const data=parseBRDate(get(row,iData));
-    const km=parseInt(String(get(row,iKm)).replace(/\./g,'').replace(',','.'))||0;
+    const km_ini=iKmIni>=0?parseKm(get(row,iKmIni)):0;
+    const km_fin=parseKm(get(row,iKmEfet));
     const litros=parseBRNum(row[iLit]);
     const valor=parseBRNum(row[iVal]);
+    const consumo_medio=(km_ini>0&&km_fin>km_ini&&litros>0)?+((km_fin-km_ini)/litros).toFixed(2):null;
     const errs=[];
     const veiculo=C.v.find(x=>x.placa===placa);
     if(!placa) errs.push('Placa vazia');
     else if(!veiculo) errs.push(`Placa "${placa}" não cadastrada`);
     if(!data) errs.push('Data inválida (use dd/mm/aaaa)');
-    if(!km)   errs.push('KM inválido');
+    if(!km_fin) errs.push('KM inválido');
+    if(hasNovoFmt&&km_ini>0&&km_fin>0&&km_fin<=km_ini) errs.push('KM Final deve ser > KM Inicial');
     if(!litros||isNaN(litros)) errs.push(`Litros inválido (${row[iLit]})`);
     if(!valor||isNaN(valor))   errs.push(`Valor inválido (${row[iVal]})`);
     impCData.push({
-      linha:i+1,placa,data,km,
+      linha:i+1,placa,data,
+      km:km_fin,km_inicial:km_ini,consumo_medio,
       litros:isNaN(litros)?0:litros,
       valor:isNaN(valor)?0:valor,
       tipo_combustivel:get(row,iTipo)||'Gasolina',
@@ -343,12 +354,14 @@ export function processarPlanilhaCombustivel(rows){
   document.getElementById('imp-c-sum').innerHTML=`<div class="imp-chip ok">✅ ${ok} prontos</div><div class="imp-chip er">❌ ${er} com erro</div>`;
   document.getElementById('imp-c-btn').textContent=`🚀 Importar ${ok} Abastecimentos`;
   document.getElementById('imp-c-table').innerHTML=`<table><thead><tr>
-    <th>#</th><th>Placa</th><th>Data</th><th>KM Atual</th><th>Litros</th><th>Valor Total</th><th>Tipo</th><th>Posto</th><th>Status</th>
+    <th>#</th><th>Placa</th><th>Data</th><th>KM Inicial</th><th>KM Final</th><th>Consumo (KM/L)</th><th>Litros</th><th>Valor Total</th><th>Tipo</th><th>Posto</th><th>Status</th>
   </tr></thead><tbody>${impCData.map(r=>`<tr class="${r.ok?'row-ok':'row-err'}">
     <td>${r.linha}</td>
     <td><strong>${r.placa}</strong></td>
     <td>${window.fd(r.data)}</td>
+    <td>${r.km_inicial>0?r.km_inicial.toLocaleString('pt-BR'):'—'}</td>
     <td>${r.km.toLocaleString('pt-BR')}</td>
+    <td>${r.consumo_medio!=null?`<strong>${r.consumo_medio.toLocaleString('pt-BR',{minimumFractionDigits:2})}</strong>`:'—'}</td>
     <td><strong>${r.litros.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:3})}</strong></td>
     <td>R$ ${r.valor.toLocaleString('pt-BR',{minimumFractionDigits:2})}</td>
     <td>${r.tipo_combustivel}</td>
