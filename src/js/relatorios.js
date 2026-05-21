@@ -20,7 +20,11 @@ export function getFiltrosRel(){
     ct:document.getElementById('rel-ct')?.value||'',
     loc:document.getElementById('rel-loc')?.value||'',
     frota:document.getElementById('rel-frota')?.value||'',
-    statusV:document.getElementById('rel-status-v')?.value||''
+    statusV:document.getElementById('rel-status-v')?.value||'',
+    exec_di:document.getElementById('rel-exec-di')?.value||'',
+    exec_df:document.getElementById('rel-exec-df')?.value||'',
+    pag_di:document.getElementById('rel-pag-di')?.value||'',
+    pag_df:document.getElementById('rel-pag-df')?.value||''
   };
 }
 
@@ -45,6 +49,23 @@ export function filtrarDados(tipo){
     manut=manut.filter(m=>dentroData(m.data));
     multas=multas.filter(m=>dentroData(m.data_infracao));
   }
+  // Filtros específicos de manutenção
+  if(f.exec_di||f.exec_df){
+    manut=manut.filter(m=>{
+      if(!m.data)return false;
+      if(f.exec_di&&m.data<f.exec_di)return false;
+      if(f.exec_df&&m.data>f.exec_df)return false;
+      return true;
+    });
+  }
+  if(f.pag_di||f.pag_df){
+    manut=manut.filter(m=>{
+      if(!m.data_pagamento)return false;
+      if(f.pag_di&&m.data_pagamento<f.pag_di)return false;
+      if(f.pag_df&&m.data_pagamento>f.pag_df)return false;
+      return true;
+    });
+  }
   return{veics,vids,abast,manut,multas};
 }
 
@@ -64,7 +85,7 @@ export function renderRelCards(){
 }
 
 export function limparFiltrosRel(){
-  ['rel-di','rel-df'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  ['rel-di','rel-df','rel-exec-di','rel-exec-df','rel-pag-di','rel-pag-df'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
   ['rel-ct','rel-loc'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
   fecharPreview();
 }
@@ -75,6 +96,7 @@ export function fecharPreview(){
 
 export function previewRel(tipo){
   const {veics,abast,manut}=filtrarDados(tipo);
+  const f=getFiltrosRel();
   const dt=new Date().toLocaleDateString('pt-BR');
   let headers=[],rows=[];
   const rel=RELS.find(r=>r.id===tipo);
@@ -98,15 +120,15 @@ export function previewRel(tipo){
       return[v.placa,v.modelo,cls,gCT(v.contrato_id).nome_contrato,gLoc(v.localidade_id).nome_localidade,fd(a.data),a.km_atual||0,Number(a.litros).toFixed(2),cur(a.valor_total),a.tipo_combustivel||'',a.posto||'',kml];
     });
   } else if(tipo==='manutencao'){
-    headers=['Placa','Modelo','Classificação','Contrato','Localidade','Tipo Serviço','Descrição','Data','KM','Valor'];
+    headers=['Placa','Modelo','Classificação','Contrato','Localidade','Tipo Serviço','Descrição','Data Execução','Data Pagamento','KM','Valor'];
     rows=manut.map(m=>{
       const v=gV(m.veiculo_id);
       const cls=(v.classificacao||'producao')==='producao'?'Produção':'Unidade Fixa';
-      return[v.placa,v.modelo,cls,gCT(v.contrato_id).nome_contrato,gLoc(v.localidade_id).nome_localidade,m.tipo_servico,m.descricao||'—',fd(m.data),m.km||0,cur(m.valor)];
+      return[v.placa,v.modelo,cls,gCT(v.contrato_id).nome_contrato,gLoc(v.localidade_id).nome_localidade,m.tipo_servico,m.descricao||'—',fd(m.data),fd(m.data_pagamento)||'—',m.km||0,cur(m.valor)];
     });
   } else if(tipo==='contratos'){
     headers=['Contrato','Nº Veículos','Produção','Unid. Fixa','OS','Abastec.','Manut R$','Comb R$','Total R$'];
-    rows=C.ct.map(ct=>{
+    rows=C.ct.filter(ct=>!f.ct||String(ct.id)===String(f.ct)).map(ct=>{
       const vids2=veics.filter(v=>v.contrato_id==ct.id).map(v=>v.id);
       const vProd=veics.filter(v=>v.contrato_id==ct.id&&(v.classificacao||'producao')==='producao').length;
       const vFix=veics.filter(v=>v.contrato_id==ct.id&&v.classificacao==='unidade_fixa').length;
@@ -179,9 +201,8 @@ export function previewRel(tipo){
 
   if(!rows.length){toast('Nenhum dado com os filtros selecionados.','i');return;}
 
-  const f=getFiltrosRel();
-  const filtroInfo=(f.di||f.df||f.ct||f.loc)?`<div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:6px;padding:7px 12px;margin-bottom:10px;font-size:11px;color:#1d4ed8">
-    🔍 Filtros: ${f.di?'De '+fd(f.di)+' ':''} ${f.df?'até '+fd(f.df)+' ':''} ${f.ct?'| Contrato: '+gCT(f.ct).nome_contrato+' ':''} ${f.loc?'| Localidade: '+gLoc(f.loc).nome_localidade:''}
+  const filtroInfo=(f.di||f.df||f.ct||f.loc||f.exec_di||f.exec_df||f.pag_di||f.pag_df)?`<div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:6px;padding:7px 12px;margin-bottom:10px;font-size:11px;color:#1d4ed8">
+    🔍 Filtros: ${f.di?'De '+fd(f.di)+' ':''} ${f.df?'até '+fd(f.df)+' ':''} ${f.ct?'| Contrato: '+gCT(f.ct).nome_contrato+' ':''} ${f.loc?'| Localidade: '+gLoc(f.loc).nome_localidade+' ':''} ${f.exec_di||f.exec_df?'| Exec.: '+(f.exec_di?fd(f.exec_di):'')+' — '+(f.exec_df?fd(f.exec_df):'')+' ':''} ${f.pag_di||f.pag_df?'| Pgto: '+(f.pag_di?fd(f.pag_di):'')+' — '+(f.pag_df?fd(f.pag_df):''):''}
   </div>`:'';
 
   const tbl=`${filtroInfo}<div style="overflow-x:auto;-webkit-overflow-scrolling:touch"><table style="border-collapse:collapse;min-width:600px;width:max-content">

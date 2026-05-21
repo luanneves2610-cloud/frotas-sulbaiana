@@ -417,6 +417,10 @@
               <div class="fgp"><label>Localidade</label><select id="rel-loc"><option value="">Todas as localidades</option></select></div>
               <div class="fgp"><label>Tipo de Frota</label><select id="rel-frota" style="background:var(--s1);border:1px solid var(--b2);padding:8px 12px;border-radius:8px;font-size:13px"><option value="">Todas</option><option value="propria">🏢 Frota Própria</option><option value="locada">🔑 Veículo Locado</option></select></div>
               <div class="fgp"><label>Status do Veículo</label><select id="rel-status-v" style="background:var(--s1);border:1px solid var(--b2);padding:8px 12px;border-radius:8px;font-size:13px"><option value="">Todos</option><option value="ativo">Ativo</option><option value="manutenção">Manutenção</option><option value="inativo">Inativo</option><option value="devolvido">Devolvido</option><option value="disp. para venda">Disp. para Venda</option><option value="vendido">Vendido</option></select></div>
+              <div class="fgp"><label>🔧 Exec. — De</label><input type="date" id="rel-exec-di"></div>
+              <div class="fgp"><label>🔧 Exec. — Até</label><input type="date" id="rel-exec-df"></div>
+              <div class="fgp"><label>💳 Pagamento — De</label><input type="date" id="rel-pag-di"></div>
+              <div class="fgp"><label>💳 Pagamento — Até</label><input type="date" id="rel-pag-df"></div>
             </div></div>
           </div>
           <div class="g3" id="rel-cards"></div>
@@ -778,7 +782,8 @@
         <option value="Ambos os lados">↔️ Ambos os lados</option>
       </select>
     </div>
-    <div class="fgp"><label>Data *</label><input id="mm-data" type="date"></div>
+    <div class="fgp"><label>Data de Execução *</label><input id="mm-data" type="date"></div>
+    <div class="fgp"><label>Data de Pagamento</label><input id="mm-dpag" type="date"></div>
     <div class="fgp"><label>KM *<span style="font-size:10px;color:var(--tm);margin-left:4px">obrigatório</span></label><input id="mm-km" type="number" min="1" step="1" placeholder="Ex: 45200" oninput="this.value=this.value.replace(/[^0-9]/g,'')"></div>
     <div class="fgp"><label>Valor (R$) *</label><input id="mm-val" type="number" step="0.01" min="0"></div>
     <div class="fgp"><label>Centro de Custo</label><select id="mm-cc"></select></div>

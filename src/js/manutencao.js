@@ -25,6 +25,7 @@ export function abrirMM(){
   document.getElementById('mm-lado-box').style.display='none';
   ['mm-km','mm-val','mm-desc'].forEach(id=>document.getElementById(id).value='');
   document.getElementById('mm-data').value=now();
+  document.getElementById('mm-dpag').value='';
   document.getElementById('mm-nfn').textContent='';
   document.getElementById('mm-placa-busca').value='';
   document.getElementById('mm-v').value='';
@@ -58,6 +59,7 @@ export function editM(id){
   lb.style.display=(v&&v.tipo==='CARRO'&&tiposComLado.includes(tipoBase)&&ladoVal)?'block':'none';
   if(ladoVal)document.getElementById('mm-lado').value=ladoVal;
   document.getElementById('mm-data').value=_em.data;
+  document.getElementById('mm-dpag').value=_em.data_pagamento||'';
   document.getElementById('mm-km').value=_em.km||'';
   document.getElementById('mm-val').value=_em.valor;
   document.getElementById('mm-cc').value=_em.centro_custo_id;
@@ -77,7 +79,8 @@ export async function salvarM(){
   if(!val||val<=0){window.toast('Informe o valor!','e');return;}
   const nf=document.getElementById('mm-nf').files[0];
   const _lado=document.getElementById('mm-lado-box').style.display!=='none'?document.getElementById('mm-lado').value:null;
-  const p={veiculo_id:vid,tipo_servico:document.getElementById('mm-tip').value+((_lado)?` — ${_lado}`:''),descricao:document.getElementById('mm-desc').value,data:document.getElementById('mm-data').value,km:km,valor:val,centro_custo_id:document.getElementById('mm-cc').value||C.v.find(x=>x.id==vid)?.centro_custo_id||'',nf:nf?nf.name:(_em?.nf||''),usuario_id:SESSION.id,data_lancamento:now()};
+  const dpag=document.getElementById('mm-dpag').value||null;
+  const p={veiculo_id:vid,tipo_servico:document.getElementById('mm-tip').value+((_lado)?` — ${_lado}`:''),descricao:document.getElementById('mm-desc').value,data:document.getElementById('mm-data').value,data_pagamento:dpag,km:km,valor:val,centro_custo_id:document.getElementById('mm-cc').value||C.v.find(x=>x.id==vid)?.centro_custo_id||'',nf:nf?nf.name:(_em?.nf||''),usuario_id:SESSION.id,data_lancamento:now()};
   _saving=true;lov(true);
   try{
     if(_em)await FB.upd('manutencoes',_em.id,p);
