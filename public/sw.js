@@ -3,7 +3,7 @@
 // Estratégia: Cache-first para assets, Network-first para API
 // ═══════════════════════════════════════════════════════════
 
-const CACHE_NAME = 'frotas-checklist-v1';
+const CACHE_NAME = 'frotas-checklist-v2';
 const SB_HOST = 'kjblegripbhbrttejiyv.supabase.co';
 
 // Assets estáticos que serão cacheados na instalação
@@ -53,6 +53,22 @@ self.addEventListener('fetch', event => {
           headers: { 'Content-Type': 'application/json' }
         })
       )
+    );
+    return;
+  }
+
+  // Navegação (index.html / app shell): Network-first para sempre pegar o build mais recente.
+  // Sem isso, o index.html cacheado aponta para um bundle antigo e o usuário fica preso
+  // numa versão desatualizada do código mesmo após um novo deploy.
+  if (request.mode === 'navigate') {
+    event.respondWith(
+      fetch(request).then(response => {
+        if (response.ok) {
+          const clone = response.clone();
+          caches.open(CACHE_NAME).then(cache => cache.put(request, clone));
+        }
+        return response;
+      }).catch(() => caches.match(request).then(c => c || caches.match('/index.html')))
     );
     return;
   }
