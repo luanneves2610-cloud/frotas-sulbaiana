@@ -25,14 +25,26 @@
 [data-theme="dark"] input::placeholder{color:#4b5563}
 [data-theme="dark"] .topbar{background:rgba(9,14,26,.96);border-color:#1f2937}
 [data-theme="dark"] tbody tr:nth-child(even){background:#141e2e}
-[data-theme="dark"] tbody tr:hover{background:#1f2937 !important}
+[data-theme="dark"] tbody tr:hover{background:rgba(59,130,246,.07) !important}
 [data-theme="dark"] input[type=date],[data-theme="dark"] input[type=number],[data-theme="dark"] input[type=month]{color-scheme:dark}
+/* dark mode — inline-styled selects/inputs em fbar */
+[data-theme="dark"] .fbar select,
+[data-theme="dark"] .fbar input[type=text],
+[data-theme="dark"] .fbar input[type=month]{
+  background:#1a2233 !important;border-color:#2d3748 !important;color:#f1f5f9 !important;
+}
+/* dark mode — thead */
+[data-theme="dark"] thead th{background:#0d1520 !important;border-bottom:1px solid #1f2937 !important;}
+
 *{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
 body{
-  font-family:'Inter',sans-serif;background:var(--bg);color:var(--tx);min-height:100vh;overflow-x:hidden;font-size:14px;
+  font-family:'DM Sans','Inter',sans-serif;background:var(--bg);color:var(--tx);min-height:100vh;overflow-x:hidden;font-size:14px;
 }
 [data-theme="dark"] body{background-image:radial-gradient(circle,rgba(30,41,59,.8) 1px,transparent 1px)}
-::-webkit-scrollbar{width:5px;height:5px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--b2);border-radius:3px}
+::-webkit-scrollbar{width:5px;height:5px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--b2);border-radius:10px;transition:background .2s}
 ::-webkit-scrollbar-thumb:hover{background:#94a3b8}
 .t-bl{color:var(--ac)}.t-gr{color:var(--a3)}.t-or{color:var(--a2)}.t-ye{color:var(--a4)}.t-rd{color:var(--rd)}.t-mu{color:var(--tm)}.fw7{font-weight:700}.fs11{font-size:11px}
 @media(max-width:768px){:root{--sw:0px}.sidebar{transform:translateX(-264px)}.main{margin-left:0}.kpi-grid{grid-template-columns:1fr 1fr}.g21,.g2{grid-template-columns:1fr}.content{padding:14px}}
