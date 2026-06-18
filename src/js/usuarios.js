@@ -1,6 +1,7 @@
 import { C, SESSION } from './state.js';
 import { now, gCT, slog, toast, lov, esc } from './utils.js';
 import { FB, sbReq } from './api.js';
+import { supabase } from './config.js';
 
 let _eu = null;
 let _senhaUid = null;
@@ -18,14 +19,12 @@ export function renderU() {
   const pb = p => p === 'admin' ? 'b-rd' : p === 'financeiro' ? 'b-pu' : p === 'operacional' ? 'b-bl' : 'b-gy';
   document.getElementById('tb-u').innerHTML = lista.map(u => {
     const ct = u.contrato_id ? gCT(u.contrato_id).nome_contrato || '—' : 'Todos';
-    const migrado = u.auth_id ? '🔒' : '⚠️';
-    const migradoTitle = u.auth_id ? 'Supabase Auth ativo' : 'Usuário legado — senha no banco';
     const nomeEsc  = esc(u.nome);
     const emailEsc = esc(u.email);
     const ctEsc    = esc(ct);
     return `<tr>
       <td><strong>${nomeEsc}</strong></td>
-      <td class="t-mu fs11">${emailEsc} <span title="${esc(migradoTitle)}" style="cursor:help">${migrado}</span></td>
+      <td class="t-mu fs11">${emailEsc} <span title="Supabase Auth ativo" style="cursor:help">🔒</span></td>
       <td><span class="badge ${pb(u.perfil)}">${esc(u.perfil?.toUpperCase())}</span></td>
       <td class="fs11"><span class="badge b-gy" style="font-size:10px">${ctEsc}</span></td>
       <td><span class="badge ${u.status === 'ativo' ? 'b-gr' : 'b-gy'}">${esc(u.status)}</span></td>
@@ -99,21 +98,26 @@ export async function salvarU() {
   lov(true, _eu ? 'Atualizando usuário...' : 'Criando usuário...');
   try {
     if (_eu) {
-      // Edição — atualiza perfil na tabela usuarios
+      // Edição — atualiza apenas perfil/status/contrato na tabela usuarios
       await FB.upd('usuarios', _eu.id, p);
       slog(`Usuário editado: ${nome}`);
       toast('✅ Usuário atualizado!');
     } else {
-      // Novo usuário — insere direto na tabela (login via modo legado)
-      // Evita rate limit do Supabase Auth (signUp só permite 1 por vez a cada 18s)
+      // Novo usuário — cria no Supabase Auth primeiro, depois vincula na tabela
       const jaExiste = await sbReq('GET','usuarios',null,`email=eq.${encodeURIComponent(email)}&select=id`);
       if(jaExiste && jaExiste.length > 0){
         toast(`🚫 E-mail ${email} já está cadastrado!`,'e');
         return;
       }
-      await FB.add('usuarios', { ...p, senha: s, data_criacao: now() });
+      const { data: authData, error: authErr } = await supabase.auth.signUp({ email, password: s });
+      if (authErr) {
+        toast('Erro ao criar conta: ' + authErr.message, 'e');
+        return;
+      }
+      const authId = authData.user?.id || null;
+      await FB.add('usuarios', { ...p, auth_id: authId, data_criacao: now() });
       slog(`Usuário criado: ${nome}`);
-      toast(`✅ Usuário ${nome} criado com sucesso!`);
+      toast(`✅ Usuário ${nome} criado! Um e-mail de confirmação foi enviado.`);
     }
     await window.loadAll();
     window.cMo('mo-u');
@@ -127,14 +131,34 @@ export async function salvarU() {
 
 export function abrirTrocaSenha(uid, nome, email) {
   _senhaUid = uid;
-  document.getElementById('ms-title').textContent = `🔑 Redefinir Senha — ${nome}`;
-  document.getElementById('ms-nome').value = nome;
-  document.getElementById('ms-nova').value = '';
-  document.getElementById('ms-conf').value = '';
+  const isPropria = String(uid) === String(SESSION?.id);
+
+  document.getElementById('ms-title').textContent = isPropria
+    ? '🔑 Alterar Minha Senha'
+    : `📧 Redefinir Senha — ${nome}`;
 
   // Guarda o e-mail no modal para uso na redefinição
   const msModal = document.getElementById('mo-senha');
   if (msModal) msModal.dataset.email = email || '';
+
+  // Alterna entre os dois modos de UI
+  const modoPropria = document.getElementById('ms-modo-propria');
+  const modoEmail   = document.getElementById('ms-modo-email');
+  const btnAcao     = document.getElementById('ms-btn-acao');
+
+  if (isPropria) {
+    modoPropria.style.display = '';
+    modoEmail.style.display   = 'none';
+    document.getElementById('ms-nome').value  = nome;
+    document.getElementById('ms-nova').value  = '';
+    document.getElementById('ms-conf').value  = '';
+    btnAcao.textContent = '🔑 Alterar Senha';
+  } else {
+    modoPropria.style.display = 'none';
+    modoEmail.style.display   = '';
+    document.getElementById('ms-nome-email').value = `${nome} <${email}>`;
+    btnAcao.textContent = '📧 Enviar E-mail de Redefinição';
+  }
 
   window.oMo('mo-senha');
 }
@@ -146,19 +170,30 @@ export async function salvarNovaSenha() {
   if (!nova || nova.length < 6) { toast('A senha deve ter pelo menos 6 caracteres!', 'e'); return; }
   if (nova !== conf) { toast('As senhas não conferem!', 'e'); return; }
 
-  // Verifica se o usuário tem auth_id (migrado para Supabase Auth)
   const u = C.u.find(u => u.id == _senhaUid);
   const msModal = document.getElementById('mo-senha');
   const email = msModal?.dataset.email || u?.email || '';
+  const isPropria = u?.id == SESSION?.id;
 
   lov(true, 'Redefinindo senha...');
   try {
-    // Atualiza senha direto na tabela (modo legado — sem dependência do Supabase Auth)
-    await FB.upd('usuarios', _senhaUid, { senha: nova });
-    await slog(`Senha redefinida para usuário id ${_senhaUid}`);
-    window.cMo('mo-senha');
-    toast('✅ Senha redefinida com sucesso!');
-    await window.loadAll();
+    if (isPropria) {
+      // Própria senha: atualiza via SDK (usuário já autenticado)
+      const { error } = await supabase.auth.updateUser({ password: nova });
+      if (error) throw error;
+      await slog('Senha própria alterada');
+      window.cMo('mo-senha');
+      toast('✅ Senha alterada com sucesso!');
+    } else {
+      // Outro usuário: envia e-mail de redefinição pelo Supabase Auth
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: window.location.origin
+      });
+      if (error) throw error;
+      await slog(`E-mail de redefinição enviado para ${email}`);
+      window.cMo('mo-senha');
+      toast(`📧 E-mail de redefinição enviado para ${email}`);
+    }
   } catch (e) {
     toast('Erro: ' + e.message, 'e');
   } finally {

@@ -1,6 +1,8 @@
 import { supabase } from './config.js';
 import { sbReq, setAuthToken } from './api.js';
 import { FB } from './api.js';
+// Nota: login legado (senha em texto puro) removido em 2026-06 — todos os usuários
+// autenticam exclusivamente via Supabase Auth (auth_id preenchido em todos os registros).
 import { C, SESSION, setSession, clearSession, resetC, setC } from './state.js';
 import { lov, slog, now, curMonth, toast } from './utils.js';
 
@@ -87,10 +89,7 @@ export async function doLogin() {
     });
 
     if (authError) {
-      // Fallback para autenticação legada (senha no banco) — para usuários ainda não migrados
-      const legacyOk = await _loginLegacy(email, senha);
-      if (!legacyOk) throw new Error('credenciais');
-      return; // _loginLegacy faz o setup completo
+      throw new Error('credenciais');
     }
 
     setAuthToken(authData.session.access_token);
@@ -106,26 +105,6 @@ export async function doLogin() {
   } finally {
     btn.innerHTML = 'Entrar no Sistema';
     btn.disabled = false;
-  }
-}
-
-// ── Login legado (senha em texto puro na tabela usuarios) ──────────────────
-// Mantido para compatibilidade com usuários ainda não migrados para Auth
-async function _loginLegacy(email, senha) {
-  try {
-    const users = await sbReq('GET', 'usuarios', null,
-      `email=eq.${encodeURIComponent(email)}&select=*`);
-    const user = users.find(u =>
-      u.email?.toLowerCase() === email &&
-      u.senha === senha &&
-      u.status === 'ativo'
-    );
-    if (!user) return false;
-    _finalizarLogin(user);
-    slog('Login realizado (modo legado)');
-    return true;
-  } catch {
-    return false;
   }
 }
 
