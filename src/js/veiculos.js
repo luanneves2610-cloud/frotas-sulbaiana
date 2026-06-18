@@ -1,5 +1,5 @@
 import { C, SESSION } from './state.js';
-import { cur, lov, slog, now } from './utils.js';
+import { cur, lov, slog, now, esc } from './utils.js';
 import { FB } from './api.js';
 
 let _ev=null;
@@ -35,15 +35,19 @@ export function renderV(){
   const clsBadge=c=>c==='unidade_fixa'?'<span class="badge" style="background:#f5f3ff;color:#7c3aed;border:1px solid #ddd6fe;font-size:10px">🏭 Unid. Fixa</span>':'<span class="badge" style="background:#eff6ff;color:#1d6fdf;border:1px solid #bfdbfe;font-size:10px">🚛 Produção</span>';
   document.getElementById('tb-v').innerHTML=d.map(v=>{
     const nMov=(C.mov||[]).filter(m=>m.veiculo_id==v.id).length;
+    const ctNome=esc(v.contratos?.nome_contrato||window.gCT(v.contrato_id).nome_contrato);
+    const locNome=esc(v.localidades?.nome_localidade||window.gLoc(v.localidade_id).nome_localidade);
+    const ccNome=esc(v.centros_custo?.nome||window.gCC(v.centro_custo_id).nome);
+    const destEsc=v.destino_devolucao==='sede'?'Sede':esc(window.gCT(v.destino_devolucao).nome_contrato||v.destino_devolucao);
     return`<tr>
-    <td><strong class="mono t-bl">${v.placa}</strong></td>
-    <td>${v.modelo} <span class="t-mu fs11">${v.ano||''}</span></td>
+    <td><strong class="mono t-bl">${esc(v.placa)}</strong></td>
+    <td>${esc(v.modelo)} <span class="t-mu fs11">${esc(v.ano||'')}</span></td>
     <td>${clsBadge(v.classificacao||'producao')}</td>
-    <td><span class="badge b-bl">${v.contratos?.nome_contrato||window.gCT(v.contrato_id).nome_contrato}</span></td>
-    <td><span class="badge b-cy">📍 ${v.localidades?.nome_localidade||window.gLoc(v.localidade_id).nome_localidade}</span></td>
-    <td class="fs11">${v.centros_custo?.nome||window.gCC(v.centro_custo_id).nome}</td>
-    <td class="fs11">${v.responsavel||'—'}</td>
-    <td><span class="badge ${sb(v.status)}">${v.status}</span>${v.status==='devolvido'&&v.destino_devolucao?`<div class="fs11 t-mu" style="margin-top:2px">🏁 ${v.destino_devolucao==='sede'?'Sede':window.gCT(v.destino_devolucao).nome_contrato||v.destino_devolucao}</div>`:''}</td>
+    <td><span class="badge b-bl">${ctNome}</span></td>
+    <td><span class="badge b-cy">📍 ${locNome}</span></td>
+    <td class="fs11">${ccNome}</td>
+    <td class="fs11">${esc(v.responsavel||'—')}</td>
+    <td><span class="badge ${sb(v.status)}">${esc(v.status)}</span>${v.status==='devolvido'&&v.destino_devolucao?`<div class="fs11 t-mu" style="margin-top:2px">🏁 ${destEsc}</div>`:''}</td>
     <td class="mono">${(v.km_atual||0).toLocaleString('pt-BR')} km</td>
     <td class="t-or fw7 mono fs11">${cur(window.costV(v.id))}</td>
     <td><div style="display:flex;gap:4px;flex-wrap:wrap">

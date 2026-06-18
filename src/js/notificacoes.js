@@ -1,6 +1,6 @@
 import { SESSION } from './state.js';
 import { lov, toast } from './utils.js';
-import { FB } from './api.js';
+import { FB, getAuthToken } from './api.js';
 import { SB_URL, SB_KEY } from './config.js';
 
 const EVENTOS = [
@@ -14,12 +14,14 @@ const EVENTOS = [
 // ── Chamar Edge Function notificar ─────────────────────────────────────────
 export async function dispararNotificacao(evento, dados, referencia_id = null) {
   try {
+    // Usa JWT do usuário autenticado; cai na anon key apenas se não houver sessão ativa
+    const token = getAuthToken() || SB_KEY;
     await fetch(`${SB_URL}/functions/v1/notificar`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'apikey': SB_KEY,
-        'Authorization': 'Bearer ' + SB_KEY,
+        'Authorization': 'Bearer ' + token,
       },
       body: JSON.stringify({ evento, dados, referencia_id }),
     });
@@ -51,9 +53,10 @@ export async function renderNotificacoes() {
 
 async function _loadLogs() {
   try {
+    const token = getAuthToken() || SB_KEY;
     const res = await fetch(
       `${SB_URL}/rest/v1/notificacoes_log?order=enviado_em.desc&limit=20`,
-      { headers: { 'apikey': SB_KEY, 'Authorization': 'Bearer ' + SB_KEY } }
+      { headers: { 'apikey': SB_KEY, 'Authorization': 'Bearer ' + token } }
     );
     return res.ok ? await res.json() : [];
   } catch { return []; }

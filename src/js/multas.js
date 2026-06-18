@@ -1,5 +1,5 @@
 import { C, SESSION } from './state.js';
-import { cur, fd, lov, slog, now } from './utils.js';
+import { cur, fd, lov, slog, now, esc } from './utils.js';
 import { FB } from './api.js';
 import { dispararNotificacao } from './notificacoes.js';
 
@@ -23,16 +23,16 @@ export function renderMulatas(){
   document.getElementById('tb-mt').innerHTML=d.map(m=>{
     const v=window.gV(m.veiculo_id);
     return`<tr>
-      <td class="mono fs11">${m.numero_multa||'—'}</td>
-      <td><strong class="mono t-bl">${v.placa}</strong></td>
-      <td class="fs11">${fd(m.data_infracao)}<br><span class="t-mu">${m.hora_infracao||''}</span></td>
-      <td class="fs11" style="max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${m.tipo_infracao||'—'}</td>
-      <td class="fs11" style="max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${m.local_infracao||'—'}</td>
-      <td class="fs11">${m.orgao_autuador||'—'}</td>
-      <td class="fs11">${m.condutor||'—'}</td>
+      <td class="mono fs11">${esc(m.numero_multa||'—')}</td>
+      <td><strong class="mono t-bl">${esc(v.placa)}</strong></td>
+      <td class="fs11">${fd(m.data_infracao)}<br><span class="t-mu">${esc(m.hora_infracao||'')}</span></td>
+      <td class="fs11" style="max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(m.tipo_infracao||'—')}</td>
+      <td class="fs11" style="max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(m.local_infracao||'—')}</td>
+      <td class="fs11">${esc(m.orgao_autuador||'—')}</td>
+      <td class="fs11">${esc(m.condutor||'—')}</td>
       <td class="t-or fw7 mono">${cur(m.valor)}</td>
       <td class="t-mu fs11">${m.pontuacao||0} pts</td>
-      <td><span class="badge ${MT_ST_COLORS[m.status]||'b-gy'}" style="font-size:10px">${m.status}</span></td>
+      <td><span class="badge ${MT_ST_COLORS[m.status]||'b-gy'}" style="font-size:10px">${esc(m.status)}</span></td>
       <td><div style="display:flex;gap:4px">
         <button class="btn btn-g btn-sm btn-ic" onclick="editMulta('${m.id}')">✏️</button>
         <button class="btn btn-sm btn-ic" style="background:#fef2f2;color:#dc2626;border:1px solid #fecaca" onclick="delMulta('${m.id}')">🗑️</button>

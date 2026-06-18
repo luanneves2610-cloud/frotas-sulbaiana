@@ -1,5 +1,5 @@
 import { C, SESSION } from './state.js';
-import { fd, lov, slog, now } from './utils.js';
+import { fd, lov, slog, now, esc } from './utils.js';
 import { FB } from './api.js';
 import { sbReq } from './api.js';
 
@@ -34,13 +34,13 @@ export function renderMov(){
     const v=window.gV(m.veiculo_id);
     return`<tr>
       <td class="fs11">${fd(m.data_movimentacao)}</td>
-      <td><strong class="mono t-bl">${v.placa||'—'}</strong><div class="fs11 t-mu">${v.modelo||''}</div></td>
-      <td><span class="badge ${MOV_TIPO_COLORS[m.tipo_movimentacao]||'b-gy'}" style="font-size:10px">${m.tipo_movimentacao}</span></td>
-      <td class="fs11">${m.origem||'—'}</td>
-      <td class="fs11">${m.destino||'—'}</td>
+      <td><strong class="mono t-bl">${esc(v.placa||'—')}</strong><div class="fs11 t-mu">${esc(v.modelo||'')}</div></td>
+      <td><span class="badge ${MOV_TIPO_COLORS[m.tipo_movimentacao]||'b-gy'}" style="font-size:10px">${esc(m.tipo_movimentacao)}</span></td>
+      <td class="fs11">${esc(m.origem||'—')}</td>
+      <td class="fs11">${esc(m.destino||'—')}</td>
       <td class="mono fs11">${m.km||0}</td>
-      <td class="fs11">${m.usuario_responsavel||'—'}</td>
-      <td class="fs11" style="max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${m.observacao||''}">${m.observacao||'—'}</td>
+      <td class="fs11">${esc(m.usuario_responsavel||'—')}</td>
+      <td class="fs11" style="max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${esc(m.observacao||'')}">${esc(m.observacao||'—')}</td>
       <td><div style="display:flex;gap:4px">
         ${SESSION?.perfil==='admin'?`<button class="btn btn-sm btn-ic" style="background:#fef2f2;color:#dc2626;border:1px solid #fecaca" onclick="delMov('${m.id}')">🗑️</button>`:''}
       </div></td>

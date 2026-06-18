@@ -1,5 +1,5 @@
 import { C, SESSION } from './state.js';
-import { cur, lov, slog } from './utils.js';
+import { cur, lov, slog, esc } from './utils.js';
 import { FB } from './api.js';
 
 let _ecc=null;
@@ -17,7 +17,7 @@ export function renderCC(){
   document.getElementById('tb-cc').innerHTML=data.map(c=>{
     const ids=C.v.filter(v=>v.centro_custo_id===c.id).map(v=>v.id);
     const tot=C.m.filter(m=>ids.includes(m.veiculo_id)).reduce((s,m)=>s+Number(m.valor),0)+C.a.filter(a=>ids.includes(a.veiculo_id)).reduce((s,a)=>s+Number(a.valor_total),0);
-    return`<tr><td><strong>${c.nome}</strong></td><td><span class="badge b-bl">${window.gCT(c.contrato_id).nome_contrato}</span></td><td><span class="badge b-cy">📍 ${window.gLoc(c.localidade_id).nome_localidade}</span></td><td><span class="badge b-gy">${ids.length}</span></td><td class="t-or fw7 mono">${cur(tot)}</td><td><span class="badge ${c.status==='ativo'?'b-gr':'b-gy'}">${c.status}</span></td><td>${isAdmin?`<div style="display:flex;gap:5px"><button class="btn btn-g btn-sm" onclick="editCC('${c.id}')">✏️</button><button class="btn btn-g btn-sm" onclick="togCC('${c.id}')">${c.status==='ativo'?'🚫':'✅'}</button><button class="btn btn-sm btn-ic" style="background:#fef2f2;color:#dc2626;border:1px solid #fecaca" onclick="delCC('${c.id}')" title="Excluir">🗑️</button></div>`:''}</td></tr>`;
+    return`<tr><td><strong>${esc(c.nome)}</strong></td><td><span class="badge b-bl">${esc(window.gCT(c.contrato_id).nome_contrato)}</span></td><td><span class="badge b-cy">📍 ${esc(window.gLoc(c.localidade_id).nome_localidade)}</span></td><td><span class="badge b-gy">${ids.length}</span></td><td class="t-or fw7 mono">${cur(tot)}</td><td><span class="badge ${c.status==='ativo'?'b-gr':'b-gy'}">${esc(c.status)}</span></td><td>${isAdmin?`<div style="display:flex;gap:5px"><button class="btn btn-g btn-sm" onclick="editCC('${c.id}')">✏️</button><button class="btn btn-g btn-sm" onclick="togCC('${c.id}')">${c.status==='ativo'?'🚫':'✅'}</button><button class="btn btn-sm btn-ic" style="background:#fef2f2;color:#dc2626;border:1px solid #fecaca" onclick="delCC('${c.id}')" title="Excluir">🗑️</button></div>`:''}</td></tr>`;
   }).join('');
   const el=document.getElementById('fcc-ct');if(el){const v=el.value;el.innerHTML='<option value="">Todos contratos</option>';C.ct.forEach(x=>{el.innerHTML+=`<option value="${x.id}">${x.nome_contrato}</option>`;});el.value=v;}
 }

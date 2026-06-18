@@ -1,5 +1,5 @@
 import { C, SESSION } from './state.js';
-import { cur, fd, lov, slog, now } from './utils.js';
+import { cur, fd, lov, slog, now, esc } from './utils.js';
 import { FB } from './api.js';
 
 let _ea=null;
@@ -27,7 +27,7 @@ export function renderA(){
     const v=window.gV(a.veiculo_id);
     const prev=C.a.filter(x=>x.veiculo_id===a.veiculo_id&&x.km_atual<a.km_atual).sort((x,y)=>y.km_atual-x.km_atual)[0];
     const kml=prev&&a.litros>0?((a.km_atual-prev.km_atual)/a.litros).toFixed(2):'—';
-    return`<tr><td><strong class="mono t-bl">${v.placa}</strong><div class="fs11 t-mu">${v.modelo}</div></td><td class="fs11"><span class="badge b-bl">${v.contratos?.nome_contrato||window.gCT(v.contrato_id).nome_contrato}</span></td><td class="fs11">📍 ${v.localidades?.nome_localidade||window.gLoc(v.localidade_id).nome_localidade}</td><td>${fd(a.data)}</td><td class="mono">${(a.km_atual||0).toLocaleString('pt-BR')}</td><td>${Number(a.litros).toFixed(2)} L</td><td class="t-or fw7 mono">${cur(a.valor_total)}</td><td><span class="badge b-bl">${a.tipo_combustivel||'—'}</span></td><td class="t-gr">${kml}</td><td><button class="btn btn-g btn-sm btn-ic" onclick="editA('${a.id}')">✏️</button></td></tr>`;
+    return`<tr><td><strong class="mono t-bl">${esc(v.placa)}</strong><div class="fs11 t-mu">${esc(v.modelo)}</div></td><td class="fs11"><span class="badge b-bl">${esc(v.contratos?.nome_contrato||window.gCT(v.contrato_id).nome_contrato)}</span></td><td class="fs11">📍 ${esc(v.localidades?.nome_localidade||window.gLoc(v.localidade_id).nome_localidade)}</td><td>${fd(a.data)}</td><td class="mono">${(a.km_atual||0).toLocaleString('pt-BR')}</td><td>${Number(a.litros).toFixed(2)} L</td><td class="t-or fw7 mono">${cur(a.valor_total)}</td><td><span class="badge b-bl">${esc(a.tipo_combustivel||'—')}</span></td><td class="t-gr">${kml}</td><td><button class="btn btn-g btn-sm btn-ic" onclick="editA('${a.id}')">✏️</button></td></tr>`;
   }).join('')||'<tr><td colspan="10" style="text-align:center;padding:32px;color:var(--tm)">Nenhum registro</td></tr>';
   const tot=d.reduce((s,a)=>s+Number(a.valor_total),0),lit=d.reduce((s,a)=>s+Number(a.litros),0);
   document.getElementById('abast-res').innerHTML=`<div class="stat-row"><div class="stat-item">Total gasto<strong class="t-or">${cur(tot)}</strong></div><div class="stat-item">Total litros<strong class="t-bl">${lit.toFixed(2)} L</strong></div><div class="stat-item">Registros<strong>${d.length}</strong></div><div class="stat-item">R$/Litro médio<strong>${lit>0?'R$ '+(tot/lit).toFixed(3):'—'}</strong></div></div>`;

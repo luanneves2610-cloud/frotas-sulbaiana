@@ -7,6 +7,10 @@ export function setAuthToken(token) {
   _authToken = token;
 }
 
+export function getAuthToken() {
+  return _authToken;
+}
+
 export async function sbReq(method, table, data, query) {
   const url = `${SB_URL}/rest/v1/${table}${query ? '?' + query : ''}`;
   const headers = {
