@@ -33,6 +33,95 @@
       <button class="btn btn-p lb" id="lbtn" onclick="doLogin()">Entrar no Sistema</button>
     </div>
     <p id="lerr" style="text-align:center;margin-top:10px;font-size:12px;color:var(--rd);display:none"></p>
+    <p style="text-align:center;margin-top:16px;font-size:11px;color:#94a3b8;line-height:1.6">
+      Ao acessar, você concorda com nossa
+      <button onclick="document.getElementById('mo-lgpd').classList.add('open')" style="background:none;border:none;color:#60a5fa;font-size:11px;cursor:pointer;text-decoration:underline;padding:0">Política de Privacidade</button>.
+      <br>Este sistema trata dados pessoais em conformidade com a LGPD (Lei nº 13.709/2018).
+    </p>
+  </div>
+</div>
+
+<!-- ════ MODAL LGPD ════ -->
+<div class="mo" id="mo-lgpd">
+  <div class="mc" style="max-width:560px;max-height:85vh;display:flex;flex-direction:column">
+    <div class="mh">
+      <div class="mt">🔐 Política de Privacidade e Proteção de Dados</div>
+      <button class="mx2" onclick="document.getElementById('mo-lgpd').classList.remove('open')">✕</button>
+    </div>
+    <div class="mb2" style="overflow-y:auto;flex:1;font-size:13px;line-height:1.8;color:var(--tx)">
+
+      <p style="background:#eff6ff;border-left:3px solid #2563eb;padding:10px 14px;border-radius:6px;margin-bottom:16px;font-size:12px;color:#1e40af">
+        Em conformidade com a <strong>Lei Geral de Proteção de Dados — LGPD (Lei nº 13.709/2018)</strong>.
+      </p>
+
+      <h3 style="font-size:13px;font-weight:700;margin-bottom:6px;color:var(--ac)">1. Responsável pelo Tratamento</h3>
+      <p style="margin-bottom:14px">
+        <strong>Sulbaiana Empreendimentos</strong> é a controladora dos dados pessoais tratados neste sistema.
+        Para contato relacionado a dados pessoais: <strong>admin@sulbaiana.com.br</strong>
+      </p>
+
+      <h3 style="font-size:13px;font-weight:700;margin-bottom:6px;color:var(--ac)">2. Dados Coletados</h3>
+      <p style="margin-bottom:14px">Este sistema coleta e trata os seguintes dados dos usuários cadastrados:</p>
+      <ul style="margin:0 0 14px 18px;display:grid;gap:4px">
+        <li><strong>Nome completo</strong> — identificação no sistema</li>
+        <li><strong>E-mail</strong> — autenticação e comunicação</li>
+        <li><strong>Perfil de acesso</strong> — controle de permissões</li>
+        <li><strong>Logs de atividade</strong> — auditoria de ações realizadas (data, hora, tipo de operação)</li>
+      </ul>
+
+      <h3 style="font-size:13px;font-weight:700;margin-bottom:6px;color:var(--ac)">3. Finalidade do Tratamento</h3>
+      <p style="margin-bottom:14px">
+        Os dados são utilizados exclusivamente para:
+      </p>
+      <ul style="margin:0 0 14px 18px;display:grid;gap:4px">
+        <li>Autenticação e controle de acesso ao sistema de gestão de frotas</li>
+        <li>Registro de operações para fins de auditoria interna</li>
+        <li>Envio de notificações operacionais relacionadas à frota</li>
+      </ul>
+
+      <h3 style="font-size:13px;font-weight:700;margin-bottom:6px;color:var(--ac)">4. Base Legal</h3>
+      <p style="margin-bottom:14px">
+        O tratamento é realizado com base no <strong>legítimo interesse</strong> da empresa (Art. 7º, IX da LGPD)
+        para gestão operacional da frota e controle de acesso ao sistema interno.
+      </p>
+
+      <h3 style="font-size:13px;font-weight:700;margin-bottom:6px;color:var(--ac)">5. Compartilhamento de Dados</h3>
+      <p style="margin-bottom:14px">
+        Os dados são armazenados na plataforma <strong>Supabase</strong> (servidores nos EUA, com adequação ao Art. 33 da LGPD).
+        Não são compartilhados com terceiros para fins comerciais.
+      </p>
+
+      <h3 style="font-size:13px;font-weight:700;margin-bottom:6px;color:var(--ac)">6. Retenção de Dados</h3>
+      <p style="margin-bottom:14px">
+        Os dados de acesso são mantidos enquanto o vínculo com a empresa estiver ativo.
+        Após o desligamento, os dados são inativados e removidos em até <strong>90 dias</strong>.
+        Logs de auditoria são mantidos por <strong>12 meses</strong>.
+      </p>
+
+      <h3 style="font-size:13px;font-weight:700;margin-bottom:6px;color:var(--ac)">7. Seus Direitos (Art. 18 LGPD)</h3>
+      <ul style="margin:0 0 14px 18px;display:grid;gap:4px">
+        <li><strong>Acesso</strong> — solicitar cópia dos seus dados</li>
+        <li><strong>Correção</strong> — atualizar dados incorretos</li>
+        <li><strong>Eliminação</strong> — solicitar exclusão dos dados</li>
+        <li><strong>Portabilidade</strong> — receber seus dados em formato estruturado</li>
+        <li><strong>Revogação</strong> — revogar consentimento a qualquer momento</li>
+      </ul>
+      <p style="margin-bottom:14px">
+        Para exercer seus direitos, entre em contato: <strong>admin@sulbaiana.com.br</strong>
+      </p>
+
+      <h3 style="font-size:13px;font-weight:700;margin-bottom:6px;color:var(--ac)">8. Segurança</h3>
+      <p style="margin-bottom:6px">
+        Adotamos medidas técnicas de segurança incluindo: autenticação com JWT, senhas com hash bcrypt,
+        controle de acesso por perfil, logs de auditoria e comunicação cifrada (HTTPS/TLS).
+      </p>
+
+    </div>
+    <div class="mf" style="border-top:1px solid var(--b1);padding-top:12px">
+      <button class="btn btn-p" onclick="document.getElementById('mo-lgpd').classList.remove('open')" style="width:100%">
+        Entendi — Fechar
+      </button>
+    </div>
   </div>
 </div>
 
