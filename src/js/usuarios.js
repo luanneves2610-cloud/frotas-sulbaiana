@@ -1,5 +1,5 @@
 import { C, SESSION } from './state.js';
-import { now, gCT, slog, toast, lov } from './utils.js';
+import { now, gCT, slog, toast, lov, esc } from './utils.js';
 import { FB, sbReq } from './api.js';
 
 let _eu = null;
@@ -20,17 +20,20 @@ export function renderU() {
     const ct = u.contrato_id ? gCT(u.contrato_id).nome_contrato || '—' : 'Todos';
     const migrado = u.auth_id ? '🔒' : '⚠️';
     const migradoTitle = u.auth_id ? 'Supabase Auth ativo' : 'Usuário legado — senha no banco';
+    const nomeEsc  = esc(u.nome);
+    const emailEsc = esc(u.email);
+    const ctEsc    = esc(ct);
     return `<tr>
-      <td><strong>${u.nome}</strong></td>
-      <td class="t-mu fs11">${u.email} <span title="${migradoTitle}" style="cursor:help">${migrado}</span></td>
-      <td><span class="badge ${pb(u.perfil)}">${u.perfil?.toUpperCase()}</span></td>
-      <td class="fs11"><span class="badge b-gy" style="font-size:10px">${ct}</span></td>
-      <td><span class="badge ${u.status === 'ativo' ? 'b-gr' : 'b-gy'}">${u.status}</span></td>
+      <td><strong>${nomeEsc}</strong></td>
+      <td class="t-mu fs11">${emailEsc} <span title="${esc(migradoTitle)}" style="cursor:help">${migrado}</span></td>
+      <td><span class="badge ${pb(u.perfil)}">${esc(u.perfil?.toUpperCase())}</span></td>
+      <td class="fs11"><span class="badge b-gy" style="font-size:10px">${ctEsc}</span></td>
+      <td><span class="badge ${u.status === 'ativo' ? 'b-gr' : 'b-gy'}">${esc(u.status)}</span></td>
       <td><div style="display:flex;gap:5px">
         ${isAdmin ? `<button class="btn btn-g btn-sm" onclick="editU('${u.id}')">✏️</button>
         <button class="btn btn-g btn-sm" onclick="togU('${u.id}')">${u.status === 'ativo' ? '🚫' : '✅'}</button>` : ''}
-        <button class="btn btn-sm btn-ic" onclick="abrirTrocaSenha('${u.id}','${u.nome}','${u.email}')" title="${isAdmin ? 'Redefinir senha' : 'Alterar minha senha'}" style="background:#fefce8;border:1px solid #fde68a;color:#b45309">🔑</button>
-        ${isAdmin && u.id != SESSION?.id ? `<button class="btn btn-sm btn-ic" onclick="delU('${u.id}','${u.nome}')" title="Excluir usuário" style="background:#fef2f2;color:#dc2626;border:1px solid #fecaca">🗑️</button>` : ''}
+        <button class="btn btn-sm btn-ic" onclick="abrirTrocaSenha('${u.id}','${nomeEsc}','${emailEsc}')" title="${isAdmin ? 'Redefinir senha' : 'Alterar minha senha'}" style="background:#fefce8;border:1px solid #fde68a;color:#b45309">🔑</button>
+        ${isAdmin && u.id != SESSION?.id ? `<button class="btn btn-sm btn-ic" onclick="delU('${u.id}','${nomeEsc}')" title="Excluir usuário" style="background:#fef2f2;color:#dc2626;border:1px solid #fecaca">🗑️</button>` : ''}
       </div></td>
     </tr>`;
   }).join('') || `<tr><td colspan="6" style="text-align:center;padding:32px;color:var(--tm)">Nenhum usuário encontrado</td></tr>`;

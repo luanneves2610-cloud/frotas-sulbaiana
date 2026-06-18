@@ -38,7 +38,9 @@ export async function initApp() {
       // Tenta restaurar o perfil do sessionStorage
       const saved = sessionStorage.getItem('frotas_sb_session');
       if (saved) {
-        setSession(JSON.parse(saved));
+        const parsed = JSON.parse(saved);
+        delete parsed.senha; // nunca manter senha em memória
+        setSession(parsed);
         document.getElementById('login-screen').style.display = 'none';
         document.getElementById('app').style.display = 'flex';
         setupUI();
@@ -144,8 +146,10 @@ async function _carregarPerfilPosAuth(email) {
 }
 
 function _finalizarLogin(user) {
-  setSession(user);
-  sessionStorage.setItem('frotas_sb_session', JSON.stringify(user));
+  // Nunca guardar senha em memória ou sessionStorage — mesmo usuários legados
+  const { senha: _senhaDescartada, ...userSafe } = user;
+  setSession(userSafe);
+  sessionStorage.setItem('frotas_sb_session', JSON.stringify(userSafe));
   document.getElementById('login-screen').style.display = 'none';
   document.getElementById('app').style.display = 'flex';
   setupUI();

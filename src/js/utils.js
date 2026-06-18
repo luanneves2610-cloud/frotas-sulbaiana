@@ -1,6 +1,9 @@
 import { C, SESSION } from './state.js';
 import { sbReq } from './api.js';
 
+// Escapa caracteres HTML para evitar XSS ao usar innerHTML com dados do banco
+export const esc = s => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#x27;');
+
 export const fd = d => { if(!d) return '—'; try{const[y,mo,dy]=d.slice(0,10).split('-');return`${dy}/${mo}/${y}`}catch{return d} };
 export const cur = v => 'R$ '+Number(v||0).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
 export const now = () => { const d=new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; };
@@ -30,6 +33,7 @@ export async function slog(acao){
 }
 
 // Make globally accessible
+window.esc = esc;
 window.toast = toast;
 window.lov = lov;
 window.slog = slog;
