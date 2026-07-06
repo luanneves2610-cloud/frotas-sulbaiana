@@ -186,7 +186,7 @@ export async function salvarSenhaRecovery() {
   const nova = document.getElementById('rs-nova').value.trim();
   const conf = document.getElementById('rs-conf').value.trim();
 
-  if (!nova || nova.length < 6) { toast('A senha deve ter pelo menos 6 caracteres!', 'e'); return; }
+  if (!nova || nova.length < 8) { toast('A senha deve ter pelo menos 8 caracteres!', 'e'); return; }
   if (nova !== conf) { toast('As senhas não conferem!', 'e'); return; }
 
   lov(true, 'Salvando nova senha...');

@@ -84,7 +84,7 @@ export async function salvarU() {
 
   if (!nome || !email) { toast('Nome e e-mail obrigatórios!', 'e'); return; }
   if (!_eu && !s) { toast('Informe a senha para o novo usuário!', 'e'); return; }
-  if (!_eu && s.length < 6) { toast('A senha deve ter pelo menos 6 caracteres!', 'e'); return; }
+  if (!_eu && s.length < 8) { toast('A senha deve ter pelo menos 8 caracteres!', 'e'); return; }
 
   const p = {
     nome,
@@ -167,7 +167,7 @@ export async function salvarNovaSenha() {
   const nova = document.getElementById('ms-nova').value.trim();
   const conf = document.getElementById('ms-conf').value.trim();
 
-  if (!nova || nova.length < 6) { toast('A senha deve ter pelo menos 6 caracteres!', 'e'); return; }
+  if (!nova || nova.length < 8) { toast('A senha deve ter pelo menos 8 caracteres!', 'e'); return; }
   if (nova !== conf) { toast('As senhas não conferem!', 'e'); return; }
 
   const u = C.u.find(u => u.id == _senhaUid);
