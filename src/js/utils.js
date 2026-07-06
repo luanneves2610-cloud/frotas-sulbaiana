@@ -15,6 +15,17 @@ export const gCC = id => C.cc.find(x=>x.id==id)||{nome:'—'};
 export const costV = id => C.m.filter(x=>x.veiculo_id==id).reduce((s,x)=>s+Number(x.valor),0)+C.a.filter(x=>x.veiculo_id==id).reduce((s,x)=>s+Number(x.valor_total),0);
 export const normStr = s => String(s||'').trim().toUpperCase();
 
+// Regras de senha — espelham as políticas do Supabase Auth
+// (Minimum password length = 8, Password requirements = "Letters and digits").
+// Retorna null se válida, ou a mensagem de erro.
+export const SENHA_MIN = 8;
+export function validarSenha(s){
+  s = String(s || '');
+  if (s.length < SENHA_MIN) return `A senha deve ter pelo menos ${SENHA_MIN} caracteres!`;
+  if (!/[a-zA-Z]/.test(s) || !/[0-9]/.test(s)) return 'A senha deve conter pelo menos uma letra e um número!';
+  return null;
+}
+
 export function toast(msg, type='s'){
   const c=document.getElementById('tc'),t=document.createElement('div');
   t.className=`toast ${type}`;
@@ -47,3 +58,4 @@ window.gLoc = gLoc;
 window.gCC = gCC;
 window.costV = costV;
 window.normStr = normStr;
+window.validarSenha = validarSenha;

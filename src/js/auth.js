@@ -4,7 +4,7 @@ import { FB } from './api.js';
 // Nota: login legado (senha em texto puro) removido em 2026-06 — todos os usuários
 // autenticam exclusivamente via Supabase Auth (auth_id preenchido em todos os registros).
 import { C, SESSION, setSession, clearSession, resetC, setC } from './state.js';
-import { lov, slog, now, curMonth, toast } from './utils.js';
+import { lov, slog, now, curMonth, toast, validarSenha } from './utils.js';
 
 // ── Monitora mudanças de sessão (refresh automático de token) ──────────────
 supabase.auth.onAuthStateChange((event, session) => {
@@ -186,7 +186,8 @@ export async function salvarSenhaRecovery() {
   const nova = document.getElementById('rs-nova').value.trim();
   const conf = document.getElementById('rs-conf').value.trim();
 
-  if (!nova || nova.length < 8) { toast('A senha deve ter pelo menos 8 caracteres!', 'e'); return; }
+  const erroSenha = validarSenha(nova);
+  if (erroSenha) { toast(erroSenha, 'e'); return; }
   if (nova !== conf) { toast('As senhas não conferem!', 'e'); return; }
 
   lov(true, 'Salvando nova senha...');
