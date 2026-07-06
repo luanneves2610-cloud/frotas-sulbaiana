@@ -29,7 +29,16 @@
     </div>
     <div class="lf">
       <div class="fgp"><label>E-mail</label><input type="email" id="l-email" placeholder="seu@email.com"></div>
-      <div class="fgp"><label>Senha</label><input type="password" id="l-senha" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()"></div>
+      <div class="fgp">
+        <label>Senha</label>
+        <div style="position:relative">
+          <input type="password" id="l-senha" placeholder="••••••••" style="width:100%;padding-right:44px" onkeydown="if(event.key==='Enter')doLogin()">
+          <button type="button" id="l-senha-eye" onclick="toggleSenhaVis()" title="Mostrar/ocultar senha" style="position:absolute;right:6px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:17px;padding:4px;line-height:1">👁️</button>
+        </div>
+      </div>
+      <div style="text-align:right;margin:-2px 0 6px">
+        <button type="button" onclick="esqueciSenha()" style="background:none;border:none;color:#2563eb;font-size:12px;cursor:pointer;padding:0;text-decoration:underline">Esqueci minha senha</button>
+      </div>
       <button class="btn btn-p lb" id="lbtn" onclick="doLogin()">Entrar no Sistema</button>
     </div>
     <p id="lerr" style="text-align:center;margin-top:10px;font-size:12px;color:var(--rd);display:none"></p>
@@ -121,6 +130,25 @@
       <button class="btn btn-p" onclick="document.getElementById('mo-lgpd').classList.remove('open')" style="width:100%">
         Entendi — Fechar
       </button>
+    </div>
+  </div>
+</div>
+
+<!-- ════ MODAL DEFINIR NOVA SENHA (recuperação por e-mail) ════ -->
+<div class="mo" id="mo-reset">
+  <div class="mc" style="max-width:420px">
+    <div class="mh">
+      <div class="mt">🔑 Definir Nova Senha</div>
+    </div>
+    <div class="mb2">
+      <p style="font-size:13px;color:var(--tm);margin-bottom:16px;line-height:1.6">
+        Você acessou pelo link de redefinição de senha. Digite abaixo a sua nova senha de acesso ao sistema.
+      </p>
+      <div class="fgp"><label>Nova Senha *</label><input type="password" id="rs-nova" placeholder="mínimo 6 caracteres"></div>
+      <div class="fgp" style="margin-top:12px"><label>Confirmar Senha *</label><input type="password" id="rs-conf" placeholder="repita a nova senha" onkeydown="if(event.key==='Enter')salvarSenhaRecovery()"></div>
+    </div>
+    <div class="mf" style="border-top:1px solid var(--b1);padding-top:12px">
+      <button class="btn btn-p" style="width:100%" onclick="salvarSenhaRecovery()">Salvar Nova Senha</button>
     </div>
   </div>
 </div>

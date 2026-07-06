@@ -1,4 +1,4 @@
-import { supabase } from './config.js';
+import { supabase, SITE_URL } from './config.js';
 import { sbReq, setAuthToken } from './api.js';
 import { FB } from './api.js';
 // Nota: login legado (senha em texto puro) removido em 2026-06 — todos os usuários
@@ -31,6 +31,9 @@ function _forceLogout() {
 export async function initApp() {
   lov(true, 'Inicializando...');
   try {
+    // Se o usuário chegou por um link de redefinição de senha, trata primeiro
+    if (await _checkRecovery()) return;
+
     // Verifica se há sessão ativa no Supabase Auth
     const { data: { session } } = await supabase.auth.getSession();
 
@@ -97,6 +100,7 @@ export async function doLogin() {
 
   } catch (e) {
     lov(false);
+    err.style.color = '#dc2626';
     err.textContent = e.message === 'credenciais'
       ? 'E-mail ou senha incorretos.'
       : 'Erro de conexão. Verifique sua internet.';
@@ -105,6 +109,109 @@ export async function doLogin() {
   } finally {
     btn.innerHTML = 'Entrar no Sistema';
     btn.disabled = false;
+  }
+}
+
+// ── Mostrar/ocultar a senha no login ───────────────────────────────────────
+export function toggleSenhaVis() {
+  const inp = document.getElementById('l-senha');
+  const eye = document.getElementById('l-senha-eye');
+  if (inp.type === 'password') {
+    inp.type = 'text';
+    eye.textContent = '🙈';
+  } else {
+    inp.type = 'password';
+    eye.textContent = '👁️';
+  }
+}
+
+// ── Esqueci minha senha — envia e-mail de redefinição ──────────────────────
+export async function esqueciSenha() {
+  const email = document.getElementById('l-email').value.trim().toLowerCase();
+  const err = document.getElementById('lerr');
+  err.style.display = 'none';
+
+  if (!email) {
+    err.style.color = '#dc2626';
+    err.textContent = 'Digite seu e-mail no campo acima e clique novamente em "Esqueci minha senha".';
+    err.style.display = 'block';
+    return;
+  }
+
+  lov(true, 'Enviando e-mail de redefinição...');
+  try {
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: SITE_URL
+    });
+    if (error) throw error;
+    lov(false);
+    err.style.color = '#16a34a';
+    err.textContent = `📧 Enviamos um link de redefinição para ${email}. Verifique sua caixa de entrada (e o spam).`;
+    err.style.display = 'block';
+  } catch (e) {
+    lov(false);
+    err.style.color = '#dc2626';
+    err.textContent = 'Não foi possível enviar o e-mail agora. Tente novamente em instantes.';
+    err.style.display = 'block';
+    console.error('Reset password error:', e);
+  }
+}
+
+// ── Detecta chegada por link de recuperação (#type=recovery) ───────────────
+async function _checkRecovery() {
+  const hash = window.location.hash || '';
+  if (!hash.includes('type=recovery')) return false;
+
+  const params = new URLSearchParams(hash.slice(1));
+  const access_token = params.get('access_token');
+  const refresh_token = params.get('refresh_token');
+  if (!access_token) return false;
+
+  try {
+    await supabase.auth.setSession({ access_token, refresh_token });
+  } catch (e) {
+    console.error('Recovery setSession error:', e);
+  }
+
+  // Mostra a tela de login ao fundo com o modal de nova senha por cima
+  lov(false);
+  document.getElementById('login-screen').style.display = 'flex';
+  document.getElementById('app').style.display = 'none';
+  document.getElementById('mo-reset').classList.add('open');
+  return true;
+}
+
+// ── Salva a nova senha após clicar no link de recuperação ──────────────────
+export async function salvarSenhaRecovery() {
+  const nova = document.getElementById('rs-nova').value.trim();
+  const conf = document.getElementById('rs-conf').value.trim();
+
+  if (!nova || nova.length < 6) { toast('A senha deve ter pelo menos 6 caracteres!', 'e'); return; }
+  if (nova !== conf) { toast('As senhas não conferem!', 'e'); return; }
+
+  lov(true, 'Salvando nova senha...');
+  try {
+    const { error } = await supabase.auth.updateUser({ password: nova });
+    if (error) throw error;
+
+    // Limpa o token de recuperação da URL e encerra a sessão temporária
+    history.replaceState(null, '', window.location.pathname);
+    await supabase.auth.signOut();
+    setAuthToken(null);
+
+    document.getElementById('mo-reset').classList.remove('open');
+    document.getElementById('rs-nova').value = '';
+    document.getElementById('rs-conf').value = '';
+    lov(false);
+
+    const err = document.getElementById('lerr');
+    err.style.color = '#16a34a';
+    err.textContent = '✅ Senha alterada com sucesso! Faça login com a nova senha.';
+    err.style.display = 'block';
+  } catch (e) {
+    lov(false);
+    toast('Erro ao salvar a senha: ' + e.message, 'e');
+    console.error('salvarSenhaRecovery error:', e);
   }
 }
 
@@ -245,3 +352,6 @@ window.doLogin = doLogin;
 window.setupUI = setupUI;
 window.doLogout = doLogout;
 window.loadAll = loadAll;
+window.toggleSenhaVis = toggleSenhaVis;
+window.esqueciSenha = esqueciSenha;
+window.salvarSenhaRecovery = salvarSenhaRecovery;
