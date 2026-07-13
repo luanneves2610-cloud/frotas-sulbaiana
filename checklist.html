@@ -149,6 +149,8 @@ const H={'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Content-Type':'applic
 async function sbGet(t,q){const r=await fetch(SB_URL+'/rest/v1/'+t+'?'+(q||''),{headers:H});if(!r.ok)throw new Error(await r.text());return r.json();}
 async function sbPost(t,d){const r=await fetch(SB_URL+'/rest/v1/'+t,{method:'POST',headers:{...H,'Prefer':'return=representation'},body:JSON.stringify(d)});if(!r.ok)throw new Error(await r.text());return r.json();}
 async function sbPatch(t,id,d){const r=await fetch(SB_URL+'/rest/v1/'+t+'?id=eq.'+id,{method:'PATCH',headers:{...H,'Prefer':'return=representation'},body:JSON.stringify(d)});if(!r.ok)throw new Error(await r.text());return r.json();}
+// UPSERT — insere ou atualiza em caso de conflito (torna o reenvio idempotente)
+async function sbUpsert(t,d,onConflict){const r=await fetch(SB_URL+'/rest/v1/'+t+'?on_conflict='+onConflict,{method:'POST',headers:{...H,'Prefer':'return=representation,resolution=merge-duplicates'},body:JSON.stringify(d)});if(!r.ok)throw new Error(await r.text());return r.json();}
 
 let EXEC=null,VEICULO=null,ITENS=[],RESPOSTAS={},FOTOS_ITEM={};
 let FOTOS_GERAIS={frente:null,traseira:null,lateral_esq:null,lateral_dir:null};
@@ -724,7 +726,7 @@ async function _enviarChecklist(){
 
   for(const item of ITENS){
     const resp=RESPOSTAS[item.id]||'N/A';
-    const[rd]=await sbPost('checklist_respostas',{execucao_id:EXEC.id,item_id:item.id,resposta:resp,observacao:OBS_ITEM[item.id]||null});
+    const[rd]=await sbUpsert('checklist_respostas',{execucao_id:EXEC.id,item_id:item.id,resposta:resp,observacao:OBS_ITEM[item.id]||null},'execucao_id,item_id');
     for(const f of(FOTOS_ITEM[item.id]||[])){
       progresso();
       const path=`${EXEC.id}/item_${rd.id}_${Date.now()}.jpg`;
