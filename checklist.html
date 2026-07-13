@@ -452,7 +452,7 @@ function atualizarBotaoFinal(){
 }
 
 /* ═══ UPLOAD PARA SUPABASE STORAGE ═══ */
-async function uploadFoto(base64Data, path){
+async function uploadFoto(base64Data, path, tentativas=3){
   // Converte base64 → Blob
   const byteStr=atob(base64Data.split(',')[1]);
   const ab=new ArrayBuffer(byteStr.length);
@@ -461,13 +461,22 @@ async function uploadFoto(base64Data, path){
   const blob=new Blob([ab],{type:'image/jpeg'});
 
   const storageUrl=`${SB_URL}/storage/v1/object/checklist-fotos/${path}`;
-  const r=await fetch(storageUrl,{
-    method:'POST',
-    headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Content-Type':'image/jpeg','x-upsert':'true'},
-    body:blob
-  });
-  if(!r.ok){const err=await r.text();throw new Error('Upload falhou: '+err);}
-  return `${SB_URL}/storage/v1/object/public/checklist-fotos/${path}`;
+  // Retry automático: uma oscilação rápida de rede não deve quebrar o envio.
+  // O caminho (path) é fixo e usa x-upsert, então reenviar a mesma foto não duplica.
+  let ultimoErro;
+  for(let t=1;t<=tentativas;t++){
+    try{
+      const r=await fetch(storageUrl,{
+        method:'POST',
+        headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Content-Type':'image/jpeg','x-upsert':'true'},
+        body:blob
+      });
+      if(r.ok) return `${SB_URL}/storage/v1/object/public/checklist-fotos/${path}`;
+      ultimoErro=new Error('Upload falhou: '+await r.text());
+    }catch(e){ ultimoErro=e; }
+    if(t<tentativas) await new Promise(res=>setTimeout(res, 800*t)); // pausa crescente: 0.8s, 1.6s
+  }
+  throw ultimoErro;
 }
 
 /* ═══ FINALIZAR ═══ */
