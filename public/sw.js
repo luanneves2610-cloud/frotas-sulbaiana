@@ -3,7 +3,7 @@
 // Estratégia: Cache-first para assets, Network-first para API
 // ═══════════════════════════════════════════════════════════
 
-const CACHE_NAME = 'frotas-checklist-v2';
+const CACHE_NAME = 'frotas-checklist-v3';
 const SB_HOST = 'kjblegripbhbrttejiyv.supabase.co';
 
 // Assets estáticos que serão cacheados na instalação
