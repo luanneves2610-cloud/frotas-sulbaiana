@@ -42,7 +42,8 @@ export function renderMov(){
       <td class="fs11">${esc(m.usuario_responsavel||'—')}</td>
       <td class="fs11" style="max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${esc(m.observacao||'')}">${esc(m.observacao||'—')}</td>
       <td><div style="display:flex;gap:4px">
-        ${SESSION?.perfil==='admin'?`<button class="btn btn-sm btn-ic" style="background:#fef2f2;color:#dc2626;border:1px solid #fecaca" onclick="delMov('${m.id}')">🗑️</button>`:''}
+        ${SESSION?.perfil==='admin'?`<button class="btn btn-g btn-sm" onclick="editMov('${m.id}')" title="Editar movimentação">✏️</button>
+        <button class="btn btn-sm btn-ic" style="background:#fef2f2;color:#dc2626;border:1px solid #fecaca" onclick="delMov('${m.id}')" title="Excluir">🗑️</button>`:''}
       </div></td>
     </tr>`;
   }).join('')||'<tr><td colspan="9" style="text-align:center;padding:32px;color:var(--tm)">Nenhuma movimentação registrada</td></tr>';
@@ -51,6 +52,8 @@ export function renderMov(){
 export function abrirMMov(vidPresel){
   _emov=null;
   document.getElementById('mmov-t').textContent='🔄 Nova Movimentação';
+  const _btnSalvar=document.getElementById('mmov-btn-salvar');
+  if(_btnSalvar) _btnSalvar.textContent='💾 Registrar Movimentação';
   ['mmov-origem','mmov-destino','mmov-obs','mmov-resp'].forEach(id=>document.getElementById(id).value='');
   document.getElementById('mmov-data').value=now();
   document.getElementById('mmov-km').value='';
@@ -75,6 +78,32 @@ export function abrirMMov(vidPresel){
       document.getElementById('mmov-origem').value=window.gCT(v.contrato_id).nome_contrato||'';
     }
   }
+  window.oMo('mo-mov');
+}
+
+// Edição de uma movimentação já registrada (correção de digitação).
+// Só altera os campos do registro — NÃO reaplica status/contrato do veículo.
+export function editMov(id){
+  _emov=C.mov.find(x=>x.id==id); if(!_emov) return;
+  const v=window.gV(_emov.veiculo_id);
+  document.getElementById('mmov-t').textContent='✏️ Editar Movimentação';
+  document.getElementById('mmov-v').value=_emov.veiculo_id;
+  document.getElementById('mmov-placa-busca').value=v.placa||'';
+  document.getElementById('mmov-vi-placa').textContent=v.placa||'';
+  document.getElementById('mmov-vi-modelo').textContent=v.modelo||'';
+  document.getElementById('mmov-vi-st').textContent=v.status||'';
+  document.getElementById('mmov-v-info').style.display='block';
+  document.getElementById('mmov-sugestoes').style.display='none';
+  document.getElementById('mmov-data').value=(_emov.data_movimentacao||'').slice(0,10);
+  document.getElementById('mmov-tipo').value=_emov.tipo_movimentacao||'Entrada';
+  document.getElementById('mmov-origem').value=_emov.origem||'';
+  document.getElementById('mmov-destino').value=_emov.destino||'';
+  document.getElementById('mmov-km').value=_emov.km||'';
+  document.getElementById('mmov-obs').value=_emov.observacao||'';
+  document.getElementById('mmov-resp').value=_emov.usuario_responsavel||'';
+  document.getElementById('mmov-ct-box').style.display='none';
+  const btn=document.getElementById('mmov-btn-salvar');
+  if(btn) btn.textContent='💾 Salvar Alterações';
   window.oMo('mo-mov');
 }
 
@@ -107,6 +136,31 @@ export function getChecklist(){
 }
 
 export async function salvarMov(){
+  // ── Modo edição: corrige só os campos do registro, sem tocar no veículo ──
+  if(_emov){
+    const dataE=document.getElementById('mmov-data').value;
+    const origemE=document.getElementById('mmov-origem').value.trim();
+    const destinoE=document.getElementById('mmov-destino').value.trim();
+    if(!dataE||!origemE||!destinoE){window.toast('Data, origem e destino são obrigatórios!','e');return;}
+    const pe={
+      data_movimentacao:dataE,
+      tipo_movimentacao:document.getElementById('mmov-tipo').value,
+      origem:origemE,
+      destino:destinoE,
+      km:parseInt(document.getElementById('mmov-km').value)||0,
+      observacao:document.getElementById('mmov-obs').value||null,
+      usuario_responsavel:document.getElementById('mmov-resp').value||SESSION?.nome
+    };
+    lov(true,'Salvando alterações...');
+    try{
+      await FB.upd('movimentacoes_veiculos',_emov.id,pe);
+      await slog(`Movimentação editada: ${window.gV(_emov.veiculo_id).placa} — ${pe.tipo_movimentacao}`);
+      await window.loadAll();window.cMo('mo-mov');renderMov();
+      window.toast('✅ Movimentação atualizada!');
+    }catch(e){window.toast('Erro: '+e.message,'e');}finally{lov(false);}
+    return;
+  }
+
   const tipo=document.getElementById('mmov-tipo').value;
   const tiposQueExigem=['Saída para manutenção','Devolução','Transferência'];
   if(tiposQueExigem.includes(tipo)){
@@ -223,6 +277,7 @@ export function acBlurMov(){setTimeout(()=>{const s=document.getElementById('mmo
 window.MOV_TIPO_COLORS = MOV_TIPO_COLORS;
 window.renderMov = renderMov;
 window.abrirMMov = abrirMMov;
+window.editMov = editMov;
 window.onMmovTipo = onMmovTipo;
 window.previewFotosMov = previewFotosMov;
 window.getChecklist = getChecklist;
