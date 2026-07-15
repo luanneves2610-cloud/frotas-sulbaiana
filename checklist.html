@@ -460,18 +460,21 @@ async function uploadFoto(base64Data, path, tentativas=3){
   for(let i=0;i<byteStr.length;i++)ia[i]=byteStr.charCodeAt(i);
   const blob=new Blob([ab],{type:'image/jpeg'});
 
+  const publicUrl=`${SB_URL}/storage/v1/object/public/checklist-fotos/${path}`;
   const storageUrl=`${SB_URL}/storage/v1/object/checklist-fotos/${path}`;
-  // Retry automático: uma oscilação rápida de rede não deve quebrar o envio.
-  // O caminho (path) é fixo e usa x-upsert, então reenviar a mesma foto não duplica.
+  // INSERT puro (sem x-upsert): o papel anônimo tem permissão de INSERT, não de
+  // UPDATE. O caminho (path) é único (timestamp), então não há conflito. Num retry
+  // após um sucesso parcial, um 409 (arquivo já existe) é tratado como sucesso.
   let ultimoErro;
   for(let t=1;t<=tentativas;t++){
     try{
       const r=await fetch(storageUrl,{
         method:'POST',
-        headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Content-Type':'image/jpeg','x-upsert':'true'},
+        headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Content-Type':'image/jpeg'},
         body:blob
       });
-      if(r.ok) return `${SB_URL}/storage/v1/object/public/checklist-fotos/${path}`;
+      if(r.ok) return publicUrl;
+      if(r.status===409) return publicUrl; // já enviada numa tentativa anterior
       ultimoErro=new Error('Upload falhou: '+await r.text());
     }catch(e){ ultimoErro=e; }
     if(t<tentativas) await new Promise(res=>setTimeout(res, 800*t)); // pausa crescente: 0.8s, 1.6s
