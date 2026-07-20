@@ -39,14 +39,29 @@ export const FB = {
   del: async (table, id) => {
     await sbReq('DELETE', table, null, `id=eq.${id}`);
   },
+  // Busca todos os registros em páginas.
+  // Sem paginação, a API corta silenciosamente no limite de linhas do servidor
+  // (padrão 1000) e os totais/relatórios ficariam errados sem nenhum aviso.
   getAll: async (table, ord) => {
     const selects = {
       veiculos: 'select=*,contratos(nome_contrato),localidades(nome_localidade),centros_custo(nome)',
       centros_custo: 'select=*,contratos(nome_contrato),localidades(nome_localidade)',
     };
     const base = selects[table] || 'select=*';
-    const order = ord ? `&order=${ord}` : '&order=id';
-    return await sbReq('GET', table, null, base + order);
+    // 'id' como critério de desempate: sem ordenação estável, a paginação pode
+    // repetir ou pular linhas quando várias compartilham o mesmo valor de ordem.
+    const order = ord ? `&order=${ord},id` : '&order=id';
+
+    const PAGINA = 1000;
+    const MAX_PAGINAS = 100; // trava de segurança (100k registros)
+    let todos = [], offset = 0, lote;
+    for (let i = 0; i < MAX_PAGINAS; i++) {
+      lote = await sbReq('GET', table, null, `${base}${order}&limit=${PAGINA}&offset=${offset}`);
+      if (!Array.isArray(lote) || lote.length === 0) break;
+      todos = todos.concat(lote);
+      offset += lote.length;
+    }
+    return todos;
   },
   ts: () => new Date().toISOString()
 };
