@@ -382,7 +382,12 @@
             <option>Pisca-alerta</option><option>Retrovisor</option><option>Para-brisa</option>
             <option>Outros</option>
           </select>
-          <input type="month" id="fm-m" onchange="renderM()" style="background:var(--s1);border:1px solid var(--b2);padding:7px 11px;font-size:13px">
+          <input type="month" id="fm-m" onchange="renderM()" style="background:var(--s1);border:1px solid var(--b2);padding:7px 11px;font-size:13px" title="Mês da execução">
+          <span style="font-size:11px;color:var(--tm);white-space:nowrap">💰 Pago de</span>
+          <input type="date" id="fm-pag-di" onchange="renderM()" style="background:var(--s1);border:1px solid var(--b2);padding:7px 11px;font-size:13px" title="Pagamento a partir de">
+          <span style="font-size:11px;color:var(--tm)">até</span>
+          <input type="date" id="fm-pag-df" onchange="renderM()" style="background:var(--s1);border:1px solid var(--b2);padding:7px 11px;font-size:13px" title="Pagamento até">
+          <button class="btn btn-g btn-sm" onclick="limparFiltroPagto()" title="Limpar filtro de pagamento">✕</button>
           <div class="fsep"></div>
           <button class="btn btn-p btn-sm" onclick="abrirMM()">➕ Nova OS</button>
           <button class="btn btn-xl btn-sm" onclick="exportarExcel('manutencao')">📊 Exportar</button>
@@ -1066,6 +1071,35 @@
   <div class="mf">
     <button class="btn btn-g" onclick="cMo('mo-senha')">Cancelar</button>
     <button class="btn" id="ms-btn-acao" style="background:#b45309;color:#fff" onclick="salvarNovaSenha()">🔑 Redefinir Senha</button>
+  </div>
+</div></div>
+
+<!-- CREDENCIAIS DO COLABORADOR RECÉM-CRIADO -->
+<div class="mo" id="mo-cred"><div class="mc" style="max-width:460px">
+  <div class="mh"><div class="mt">✅ Colaborador Criado</div><button class="mx2" onclick="cMo('mo-cred')">✕</button></div>
+  <div class="mb2">
+    <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:10px;padding:12px 14px;margin-bottom:16px;font-size:12px;color:#15803d">
+      Repasse os dados abaixo ao colaborador. Ele já pode entrar no sistema.
+    </div>
+    <div style="display:grid;gap:10px;font-size:13px">
+      <div style="display:flex;justify-content:space-between;gap:12px;padding:10px 12px;background:var(--s2);border:1px solid var(--b1);border-radius:8px">
+        <span style="color:var(--tm)">Usuário</span><strong id="mcred-nome"></strong>
+      </div>
+      <div style="display:flex;justify-content:space-between;gap:12px;padding:10px 12px;background:var(--s2);border:1px solid var(--b1);border-radius:8px">
+        <span style="color:var(--tm)">E-mail</span><strong id="mcred-email" style="font-family:'JetBrains Mono',monospace;font-size:12px"></strong>
+      </div>
+      <div style="display:flex;justify-content:space-between;gap:12px;padding:10px 12px;background:#fefce8;border:1px solid #fde68a;border-radius:8px">
+        <span style="color:#92400e">Senha</span><strong id="mcred-senha" style="font-family:'JetBrains Mono',monospace;font-size:13px;color:#92400e;user-select:all"></strong>
+      </div>
+    </div>
+    <div style="margin-top:14px;font-size:12px;color:var(--tm);line-height:1.6">
+      ⚠️ Oriente o colaborador a <strong>trocar a senha no primeiro acesso</strong>, usando
+      <strong>"Esqueci minha senha"</strong> na tela de login.
+    </div>
+  </div>
+  <div class="mf">
+    <button class="btn btn-g" onclick="copiarCredenciais()">📋 Copiar</button>
+    <button class="btn btn-p" onclick="cMo('mo-cred')">Entendi</button>
   </div>
 </div></div>
 

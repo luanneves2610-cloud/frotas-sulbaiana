@@ -22,3 +22,18 @@ export const supabase = createClient(SB_URL, SB_KEY, {
     detectSessionInUrl: false
   }
 });
+
+// Cliente isolado para criar contas de colaboradores.
+// O signUp do Supabase troca a sessão ativa pela do usuário recém-criado quando
+// a confirmação de e-mail está desligada — o que deslogaria o admin no meio do
+// cadastro. Este cliente não persiste sessão, então o admin continua logado.
+export function novoClienteIsolado() {
+  return createClient(SB_URL, SB_KEY, {
+    auth: {
+      persistSession: false,
+      autoRefreshToken: false,
+      detectSessionInUrl: false,
+      storageKey: 'frotas_sb_cadastro_tmp'
+    }
+  });
+}

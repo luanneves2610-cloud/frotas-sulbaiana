@@ -1,7 +1,7 @@
 import { C, SESSION } from './state.js';
 import { now, gCT, slog, toast, lov, esc, validarSenha } from './utils.js';
 import { FB, sbReq } from './api.js';
-import { supabase } from './config.js';
+import { supabase, novoClienteIsolado } from './config.js';
 
 let _eu = null;
 let _senhaUid = null;
@@ -109,7 +109,9 @@ export async function salvarU() {
         toast(`🚫 E-mail ${email} já está cadastrado!`,'e');
         return;
       }
-      const { data: authData, error: authErr } = await supabase.auth.signUp({ email, password: s });
+      // Usa um cliente isolado: o signUp não pode substituir a sessão do admin
+      const cli = novoClienteIsolado();
+      const { data: authData, error: authErr } = await cli.auth.signUp({ email, password: s });
       if (authErr) {
         toast('Erro ao criar conta: ' + authErr.message, 'e');
         return;
@@ -117,7 +119,7 @@ export async function salvarU() {
       const authId = authData.user?.id || null;
       await FB.add('usuarios', { ...p, auth_id: authId, data_criacao: now() });
       slog(`Usuário criado: ${nome}`);
-      toast(`✅ Usuário ${nome} criado! Um e-mail de confirmação foi enviado.`);
+      mostrarCredenciais(nome, email, s);
     }
     await window.loadAll();
     window.cMo('mo-u');
@@ -127,6 +129,25 @@ export async function salvarU() {
   } finally {
     lov(false);
   }
+}
+
+// Mostra as credenciais do colaborador recém-criado para o admin repassar.
+// Fica num modal (não num toast) porque o admin precisa copiar a senha com calma.
+function mostrarCredenciais(nome, email, senha) {
+  document.getElementById('mcred-nome').textContent  = nome;
+  document.getElementById('mcred-email').textContent = email;
+  document.getElementById('mcred-senha').textContent = senha;
+  window.oMo('mo-cred');
+}
+
+export function copiarCredenciais() {
+  const nome  = document.getElementById('mcred-nome').textContent;
+  const email = document.getElementById('mcred-email').textContent;
+  const senha = document.getElementById('mcred-senha').textContent;
+  const txt = `Acesso ao Sistema Frotas Sulbaiana\n\nUsuário: ${nome}\nE-mail: ${email}\nSenha: ${senha}\n\nLink: ${window.location.origin}\n\nImportante: troque sua senha no primeiro acesso usando "Esqueci minha senha" na tela de login.`;
+  navigator.clipboard.writeText(txt)
+    .then(() => toast('📋 Credenciais copiadas!'))
+    .catch(() => toast('Não foi possível copiar — selecione e copie manualmente.', 'e'));
 }
 
 export function abrirTrocaSenha(uid, nome, email) {
@@ -248,6 +269,7 @@ window.abrirMU = abrirMU;
 window.editU = editU;
 window.salvarU = salvarU;
 window.abrirTrocaSenha = abrirTrocaSenha;
+window.copiarCredenciais = copiarCredenciais;
 window.salvarNovaSenha = salvarNovaSenha;
 window.togU = togU;
 window.delU = delU;
