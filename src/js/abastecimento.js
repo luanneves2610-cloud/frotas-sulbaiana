@@ -1,5 +1,5 @@
 import { C, SESSION } from './state.js';
-import { cur, fd, lov, slog, now, esc } from './utils.js';
+import { cur, fd, lov, slog, now, esc, checarDatas } from './utils.js';
 import { FB } from './api.js';
 
 let _ea=null;
@@ -72,6 +72,7 @@ export async function salvarA(){
   const lit=parseFloat(document.getElementById('ma-lit').value),val=parseFloat(document.getElementById('ma-val').value);
   if(!vid){window.toast('Selecione um veículo pela placa!','e');return;}
   if(!km||!lit||!val){window.toast('Preencha todos os campos obrigatórios!','e');return;}
+  if(!checarDatas([document.getElementById('ma-data').value,'Data']))return;
   const p={veiculo_id:vid,data:document.getElementById('ma-data').value,km_atual:km,litros:lit,valor_total:val,tipo_combustivel:document.getElementById('ma-tip').value,posto:document.getElementById('ma-pos').value,usuario_id:SESSION.id,data_lancamento:now()};
   lov(true);try{if(_ea)await FB.upd('abastecimentos',_ea.id,p);else await FB.add('abastecimentos',p);slog(`Abastecimento: ${window.gV(vid).placa} — ${cur(val)}`);await window.loadAll();window.cMo('mo-a');renderA();window.toast('✅ Salvo!');}catch(e){window.toast('Erro: '+e.message,'e');}finally{lov(false);}
 }

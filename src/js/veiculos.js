@@ -1,5 +1,5 @@
 import { C, SESSION } from './state.js';
-import { cur, lov, slog, now, esc } from './utils.js';
+import { cur, lov, slog, now, esc, checarDatas } from './utils.js';
 import { FB } from './api.js';
 
 let _ev=null;
@@ -145,6 +145,7 @@ export async function salvarV(){
   // data_cadastro só para novos registros
   if(!_ev) p.data_cadastro=now();
   if(p.status==='devolvido'){
+    if(!checarDatas([document.getElementById('mv-dev-data').value,'Data da devolução']))return;
     p.data_devolucao=document.getElementById('mv-dev-data').value||null;
     p.km_devolucao=parseInt(document.getElementById('mv-dev-km').value)||null;
     const destVal=document.getElementById('mv-dev-dest').value;

@@ -1,5 +1,5 @@
 import { C, SESSION } from './state.js';
-import { cur, curMonth, fd, toast } from './utils.js';
+import { cur, curMonth, fd, toast, mNoMes, semPagto, totalSemPagto } from './utils.js';
 import { supabase } from './config.js';
 import { dispararNotificacao } from './notificacoes.js';
 
@@ -74,7 +74,9 @@ export function renderDash() {
   const mF   = ctSel ? C.m.filter(m => vIds.has(m.veiculo_id)) : C.m;
 
   const fA = (arr) => mes ? arr.filter(a => a.data?.startsWith(mes)) : arr;
-  const fM = (arr) => mes ? arr.filter(m => m.data?.startsWith(mes)) : arr;
+  // Manutenção: mês definido pela DATA DE PAGAMENTO (regra oficial). OS sem
+  // pagamento não entram em mês nenhum — contabilizadas no aviso abaixo.
+  const fM = (arr) => mes ? arr.filter(m => mNoMes(m, mes)) : arr;
 
   const tc = fA(aF).reduce((s,a) => s + Number(a.valor_total), 0);
   const tm = fM(mF).reduce((s,m) => s + Number(m.valor),       0);
@@ -96,13 +98,26 @@ export function renderDash() {
 
   document.getElementById('kpi-grid').innerHTML = `
     <div class="kpi bl"><div class="kpi-top"><div class="kpi-lbl">Total ${lbl}</div><div class="kpi-ico">💰</div></div><div class="kpi-val">${cur(tt).replace('R$ ','R$')}</div><div class="kpi-sub">Manut. + Combustível</div></div>
-    <div class="kpi or"><div class="kpi-top"><div class="kpi-lbl">Combustível</div><div class="kpi-ico">⛽</div></div><div class="kpi-val">${cur(tc).replace('R$ ','R$')}</div><div class="kpi-sub">${fA(aF).length} abastecimentos</div></div>
-    <div class="kpi ye"><div class="kpi-top"><div class="kpi-lbl">Manutenção</div><div class="kpi-ico">🔧</div></div><div class="kpi-val">${cur(tm).replace('R$ ','R$')}</div><div class="kpi-sub">${fM(mF).length} ordens</div></div>
+    <div class="kpi or"><div class="kpi-top"><div class="kpi-lbl">Combustível</div><div class="kpi-ico">⛽</div></div><div class="kpi-val">${cur(tc).replace('R$ ','R$')}</div><div class="kpi-sub">${fA(aF).length} abastecimentos${mes?' · por data':''}</div></div>
+    <div class="kpi ye"><div class="kpi-top"><div class="kpi-lbl">Manutenção</div><div class="kpi-ico">🔧</div></div><div class="kpi-val">${cur(tm).replace('R$ ','R$')}</div><div class="kpi-sub">${fM(mF).length} ordens${mes?' · por pagamento':''}</div></div>
     <div class="kpi gr"><div class="kpi-top"><div class="kpi-lbl">Em Operação</div><div class="kpi-ico">🚗</div></div><div class="kpi-val">${ativos}</div><div class="kpi-sub">${emManut} em manutenção</div></div>
     <div class="kpi pu"><div class="kpi-top"><div class="kpi-lbl">Devolvidos/Sede</div><div class="kpi-ico">🏢</div></div><div class="kpi-val">${devolvidos}</div><div class="kpi-sub">${sede} na sede</div></div>
     <div class="kpi ye"><div class="kpi-top"><div class="kpi-lbl">Disp. para Venda</div><div class="kpi-ico">🏷️</div></div><div class="kpi-val">${dispVenda}</div><div class="kpi-sub">aguardando venda</div></div>
     <div class="kpi rd"><div class="kpi-top"><div class="kpi-lbl">Vendidos</div><div class="kpi-ico">💰</div></div><div class="kpi-val">${vendidos}</div><div class="kpi-sub">veículos vendidos</div></div>
     <div class="kpi or"><div class="kpi-top"><div class="kpi-lbl">Maior Custo</div><div class="kpi-ico">📍</div></div><div class="kpi-val">${top.placa}</div><div class="kpi-sub">${cur(top.total)} acumulado</div></div>`;
+
+  // Aviso — OS fora da análise por não terem data de pagamento (regra oficial)
+  const avisoEl = document.getElementById('dash-aviso-pagto');
+  if (avisoEl) {
+    const pend    = mes ? semPagto(mF) : [];
+    const pendVal = mes ? totalSemPagto(mF) : 0;
+    avisoEl.innerHTML = pend.length
+      ? `<div style="background:#fffbeb;border:1px solid #fde68a;border-radius:8px;padding:10px 14px;margin-bottom:12px;font-size:12px;display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+           <span style="font-size:15px">⚠️</span>
+           <span style="color:#92400e"><strong>${pend.length} ${pend.length===1?'OS está':'OS estão'} sem data de pagamento</strong> — ${cur(pendVal)} fora das análises mensais. As análises usam a data de pagamento como referência; use "Sem filtro" para ver o total geral.</span>
+         </div>`
+      : '';
+  }
 
   // Frota por contrato
   const ctKpis = (ctSel ? C.ct.filter(x => x.status==='ativo' && x.id==ctSel) : C.ct.filter(x => x.status === 'ativo')).map(ct => {
@@ -150,7 +165,7 @@ export function renderChart() {
     meses.push({ key: mk, lbl: d.toLocaleDateString('pt-BR', {month:'short'}).replace('.','') });
   }
   const bc = meses.map(m => aArr.filter(a => a.data?.startsWith(m.key)).reduce((s,a) => s + Number(a.valor_total), 0));
-  const bm = meses.map(m => mArr.filter(x => x.data?.startsWith(m.key)).reduce((s,x) => s + Number(x.valor),       0));
+  const bm = meses.map(m => mArr.filter(x => mNoMes(x, m.key)).reduce((s,x) => s + Number(x.valor),       0));
   const bt = bc.map((v,i) => v + bm[i]);
 
   const canvas = document.getElementById('canvas-evolucao');
@@ -251,7 +266,7 @@ export function renderDashContratos() {
     const ids = C.v.filter(v => v.contrato_id == ct.id).map(v => v.id);
     const veicsAtivos = C.v.filter(v => v.contrato_id == ct.id && v.status === 'ativo').length;
     const tot = mes
-      ? C.m.filter(m => ids.includes(m.veiculo_id) && m.data?.startsWith(mes)).reduce((s,m) => s+Number(m.valor),0)
+      ? C.m.filter(m => ids.includes(m.veiculo_id) && mNoMes(m, mes)).reduce((s,m) => s+Number(m.valor),0)
         + C.a.filter(a => ids.includes(a.veiculo_id) && a.data?.startsWith(mes)).reduce((s,a) => s+Number(a.valor_total),0)
       : C.m.filter(m => ids.includes(m.veiculo_id)).reduce((s,m) => s+Number(m.valor),0)
         + C.a.filter(a => ids.includes(a.veiculo_id)).reduce((s,a) => s+Number(a.valor_total),0);
@@ -331,7 +346,7 @@ export function renderDashLocalidades() {
       const ids = veics.map(v => v.id);
       const ct  = C.ct.find(x => x.id == ctFiltro);
       const tot = mes
-        ? C.m.filter(m => ids.includes(m.veiculo_id) && m.data?.startsWith(mes)).reduce((s,m) => s+Number(m.valor),0)
+        ? C.m.filter(m => ids.includes(m.veiculo_id) && mNoMes(m, mes)).reduce((s,m) => s+Number(m.valor),0)
           + C.a.filter(a => ids.includes(a.veiculo_id) && a.data?.startsWith(mes)).reduce((s,a) => s+Number(a.valor_total),0)
         : C.m.filter(m => ids.includes(m.veiculo_id)).reduce((s,m) => s+Number(m.valor),0)
           + C.a.filter(a => ids.includes(a.veiculo_id)).reduce((s,a) => s+Number(a.valor_total),0);
@@ -345,7 +360,7 @@ export function renderDashLocalidades() {
       const mainCtId = Object.entries(ctId).sort((a,b)=>b[1]-a[1])[0]?.[0];
       const ct = C.ct.find(x => x.id == mainCtId);
       const tot = mes
-        ? C.m.filter(m => ids.includes(m.veiculo_id) && m.data?.startsWith(mes)).reduce((s,m) => s+Number(m.valor),0)
+        ? C.m.filter(m => ids.includes(m.veiculo_id) && mNoMes(m, mes)).reduce((s,m) => s+Number(m.valor),0)
           + C.a.filter(a => ids.includes(a.veiculo_id) && a.data?.startsWith(mes)).reduce((s,a) => s+Number(a.valor_total),0)
         : C.m.filter(m => ids.includes(m.veiculo_id)).reduce((s,m) => s+Number(m.valor),0)
           + C.a.filter(a => ids.includes(a.veiculo_id)).reduce((s,a) => s+Number(a.valor_total),0);

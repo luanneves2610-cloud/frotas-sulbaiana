@@ -257,6 +257,7 @@
           <button id="btn-sem-filtro" onclick="toggleFiltroData()" style="background:var(--s2);border:1px solid var(--b2);padding:6px 12px;font-size:12px;border-radius:7px;cursor:pointer;color:var(--tm);transition:all .15s;display:flex;align-items:center;gap:5px">📊 Sem Filtro</button>
           <select id="dash-ct" onchange="renderDash()" style="background:var(--s1);border:1px solid var(--b2);padding:6px 12px;font-size:13px;border-radius:7px;display:none"><option value="">Todos contratos</option></select>
         </div>
+        <div id="dash-aviso-pagto"></div>
         <div class="kpi-grid" id="kpi-grid"></div>
         <!-- Charts Row -->
         <div class="g2" style="margin-bottom:18px">
@@ -382,11 +383,11 @@
             <option>Pisca-alerta</option><option>Retrovisor</option><option>Para-brisa</option>
             <option>Outros</option>
           </select>
-          <input type="month" id="fm-m" onchange="renderM()" style="background:var(--s1);border:1px solid var(--b2);padding:7px 11px;font-size:13px" title="Mês da execução">
+          <input type="month" id="fm-m" onchange="renderM()" style="background:var(--s1);border:1px solid var(--b2);padding:7px 11px;font-size:13px" title="Mês da data de pagamento">
           <span style="font-size:11px;color:var(--tm);white-space:nowrap">💰 Pago de</span>
-          <input type="date" id="fm-pag-di" onchange="renderM()" style="background:var(--s1);border:1px solid var(--b2);padding:7px 11px;font-size:13px" title="Pagamento a partir de">
+          <input type="date" min="2020-01-01" max="2035-12-31" id="fm-pag-di" onchange="renderM()" style="background:var(--s1);border:1px solid var(--b2);padding:7px 11px;font-size:13px" title="Pagamento a partir de">
           <span style="font-size:11px;color:var(--tm)">até</span>
-          <input type="date" id="fm-pag-df" onchange="renderM()" style="background:var(--s1);border:1px solid var(--b2);padding:7px 11px;font-size:13px" title="Pagamento até">
+          <input type="date" min="2020-01-01" max="2035-12-31" id="fm-pag-df" onchange="renderM()" style="background:var(--s1);border:1px solid var(--b2);padding:7px 11px;font-size:13px" title="Pagamento até">
           <button class="btn btn-g btn-sm" onclick="limparFiltroPagto()" title="Limpar filtro de pagamento">✕</button>
           <div class="fsep"></div>
           <button class="btn btn-p btn-sm" onclick="abrirMM()">➕ Nova OS</button>
@@ -533,16 +534,16 @@
           <div class="panel" style="margin-bottom:16px">
             <div class="ph"><div class="pt">🔍 Filtros</div><button class="btn btn-g btn-sm" onclick="limparFiltrosRel()">✕ Limpar</button></div>
             <div class="pb"><div class="fg fg2" style="gap:12px">
-              <div class="fgp"><label>Período — Início</label><input type="date" id="rel-di"></div>
-              <div class="fgp"><label>Período — Fim</label><input type="date" id="rel-df"></div>
+              <div class="fgp"><label>Período — Início</label><input type="date" min="2020-01-01" max="2035-12-31" id="rel-di"></div>
+              <div class="fgp"><label>Período — Fim</label><input type="date" min="2020-01-01" max="2035-12-31" id="rel-df"></div>
               <div class="fgp"><label>Contrato</label><select id="rel-ct"><option value="">Todos os contratos</option></select></div>
               <div class="fgp"><label>Localidade</label><select id="rel-loc"><option value="">Todas as localidades</option></select></div>
               <div class="fgp"><label>Tipo de Frota</label><select id="rel-frota" style="background:var(--s1);border:1px solid var(--b2);padding:8px 12px;border-radius:8px;font-size:13px"><option value="">Todas</option><option value="propria">🏢 Frota Própria</option><option value="locada">🔑 Veículo Locado</option></select></div>
               <div class="fgp"><label>Status do Veículo</label><select id="rel-status-v" style="background:var(--s1);border:1px solid var(--b2);padding:8px 12px;border-radius:8px;font-size:13px"><option value="">Todos</option><option value="ativo">Ativo</option><option value="manutenção">Manutenção</option><option value="inativo">Inativo</option><option value="devolvido">Devolvido</option><option value="disp. para venda">Disp. para Venda</option><option value="vendido">Vendido</option></select></div>
-              <div class="fgp"><label>🔧 Exec. — De</label><input type="date" id="rel-exec-di"></div>
-              <div class="fgp"><label>🔧 Exec. — Até</label><input type="date" id="rel-exec-df"></div>
-              <div class="fgp"><label>💳 Pagamento — De</label><input type="date" id="rel-pag-di"></div>
-              <div class="fgp"><label>💳 Pagamento — Até</label><input type="date" id="rel-pag-df"></div>
+              <div class="fgp"><label>🔧 Exec. — De</label><input type="date" min="2020-01-01" max="2035-12-31" id="rel-exec-di"></div>
+              <div class="fgp"><label>🔧 Exec. — Até</label><input type="date" min="2020-01-01" max="2035-12-31" id="rel-exec-df"></div>
+              <div class="fgp"><label>💳 Pagamento — De</label><input type="date" min="2020-01-01" max="2035-12-31" id="rel-pag-di"></div>
+              <div class="fgp"><label>💳 Pagamento — Até</label><input type="date" min="2020-01-01" max="2035-12-31" id="rel-pag-df"></div>
             </div></div>
           </div>
           <div class="g3" id="rel-cards"></div>
@@ -561,8 +562,8 @@
           <div class="panel" style="margin-bottom:16px">
             <div class="ph"><div class="pt">🔍 Filtros</div><button class="btn btn-g btn-sm" onclick="limparFiltrosGraf()">✕ Limpar</button></div>
             <div class="pb"><div class="fg fg2" style="gap:12px">
-              <div class="fgp"><label>Período — Início</label><input type="date" id="graf-di"></div>
-              <div class="fgp"><label>Período — Fim</label><input type="date" id="graf-df"></div>
+              <div class="fgp"><label>Período — Início</label><input type="date" min="2020-01-01" max="2035-12-31" id="graf-di"></div>
+              <div class="fgp"><label>Período — Fim</label><input type="date" min="2020-01-01" max="2035-12-31" id="graf-df"></div>
               <div class="fgp"><label>Contrato</label><select id="graf-sel-ct" onchange="renderGraficos()"><option value="">Todos os contratos</option></select></div>
               <div class="fgp"><label>Localidade</label><select id="graf-sel-loc" onchange="renderGraficos()"><option value="">Todas as localidades</option></select></div>
               <div class="fgp"><label>Tema</label>
@@ -660,8 +661,8 @@
               <option>Saída para manutenção</option><option>Retorno de manutenção</option><option>Venda</option>
             </select>
             <select class="btn btn-g btn-sm" id="fmov-ct" onchange="renderMov()"><option value="">Todos contratos</option></select>
-            <input class="btn btn-g btn-sm" id="fmov-di" type="date" onchange="renderMov()" title="De">
-            <input class="btn btn-g btn-sm" id="fmov-df" type="date" onchange="renderMov()" title="Até">
+            <input class="btn btn-g btn-sm" id="fmov-di" type="date" min="2020-01-01" max="2035-12-31" onchange="renderMov()" title="De">
+            <input class="btn btn-g btn-sm" id="fmov-df" type="date" min="2020-01-01" max="2035-12-31" onchange="renderMov()" title="Até">
           </div>
           <button class="btn btn-p btn-sm" onclick="abrirMMov()">➕ Nova Movimentação</button>
         </div>
@@ -708,8 +709,8 @@
     <div class="fgp s2"><label>Nome do Contrato *</label><input id="mct-n"></div>
     <div class="fgp"><label>Número</label><input id="mct-num" placeholder="CT-001/2024"></div>
     <div class="fgp"><label>Status</label><select id="mct-st"><option>ativo</option><option>inativo</option></select></div>
-    <div class="fgp"><label>Data Início</label><input id="mct-di" type="date"></div>
-    <div class="fgp"><label>Data Fim</label><input id="mct-df" type="date"></div>
+    <div class="fgp"><label>Data Início</label><input id="mct-di" type="date" min="2020-01-01" max="2035-12-31"></div>
+    <div class="fgp"><label>Data Fim</label><input id="mct-df" type="date" min="2020-01-01" max="2035-12-31"></div>
     <div class="fgp s2"><label>Descrição</label><textarea id="mct-d"></textarea></div>
   </div></div>
   <div class="mf"><button class="btn btn-g" onclick="cMo('mo-ct')">Cancelar</button><button class="btn btn-p" onclick="salvarCT()">💾 Salvar</button></div>
@@ -790,7 +791,7 @@
         <div style="background:#fefce8;border:1px solid #fde68a;border-radius:10px;padding:14px 16px">
           <div style="font-weight:600;color:#b45309;margin-bottom:12px;font-size:13px">📦 Dados da Devolução</div>
           <div class="fg fg2" style="gap:10px">
-            <div class="fgp"><label>Data da Devolução *</label><input id="mv-dev-data" type="date"></div>
+            <div class="fgp"><label>Data da Devolução *</label><input id="mv-dev-data" type="date" min="2020-01-01" max="2035-12-31"></div>
             <div class="fgp"><label>KM na Devolução</label><input id="mv-dev-km" type="number" min="0" placeholder="0"></div>
             <div class="fgp s2"><label>Destino do Veículo *</label>
               <select id="mv-dev-dest" onchange="onMvDevDest()">
@@ -853,7 +854,7 @@
       </div>
       <input type="hidden" id="ma-v">
     </div>
-    <div class="fgp"><label>Data *</label><input id="ma-data" type="date"></div>
+    <div class="fgp"><label>Data *</label><input id="ma-data" type="date" min="2020-01-01" max="2035-12-31"></div>
     <div class="fgp"><label>KM Atual *</label><input id="ma-km" type="number" min="0"></div>
     <div class="fgp"><label>Litros *</label><input id="ma-lit" type="number" step="0.001" min="0" oninput="calcA()"></div>
     <div class="fgp"><label>Valor Total (R$) *</label><input id="ma-val" type="number" step="0.01" min="0" oninput="calcA()"></div>
@@ -904,8 +905,8 @@
         <option value="Ambos os lados">↔️ Ambos os lados</option>
       </select>
     </div>
-    <div class="fgp"><label>Data de Execução *</label><input id="mm-data" type="date"></div>
-    <div class="fgp"><label>Data de Pagamento</label><input id="mm-dpag" type="date"></div>
+    <div class="fgp"><label>Data de Execução *</label><input id="mm-data" type="date" min="2020-01-01" max="2035-12-31"></div>
+    <div class="fgp"><label>Data de Pagamento</label><input id="mm-dpag" type="date" min="2020-01-01" max="2035-12-31"></div>
     <div class="fgp"><label>KM *<span style="font-size:10px;color:var(--tm);margin-left:4px">obrigatório</span></label><input id="mm-km" type="number" min="1" step="1" placeholder="Ex: 45200" oninput="this.value=this.value.replace(/[^0-9]/g,'')"></div>
     <div class="fgp"><label>Valor (R$) *</label><input id="mm-val" type="number" step="0.01" min="0"></div>
     <div class="fgp"><label>Centro de Custo</label><select id="mm-cc"></select></div>
@@ -920,7 +921,7 @@
   <div class="mh"><div class="mt" id="mmt-t">🚨 Nova Multa</div><button class="mx2" onclick="cMo('mo-mt')">✕</button></div>
   <div class="mb2"><div class="fg">
     <div class="fgp"><label>Nº da Multa *</label><input id="mmt-num" placeholder="Ex: 123456789"></div>
-    <div class="fgp"><label>Data da Infração *</label><input id="mmt-data" type="date"></div>
+    <div class="fgp"><label>Data da Infração *</label><input id="mmt-data" type="date" min="2020-01-01" max="2035-12-31"></div>
     <div class="fgp"><label>Hora da Infração</label><input id="mmt-hora" type="time"></div>
     <div class="fgp s3" style="position:relative;z-index:50">
       <label>🔍 Veículo (Placa) *</label>
@@ -999,7 +1000,7 @@
         </div>
         <input type="hidden" id="mvd-v">
       </div>
-      <div class="fgp"><label>Data da Venda *</label><input id="mvd-data" type="date"></div>
+      <div class="fgp"><label>Data da Venda *</label><input id="mvd-data" type="date" min="2020-01-01" max="2035-12-31"></div>
       <div class="fgp"><label>Valor da Venda (R$) *</label><input id="mvd-valor" type="number" step="0.01" min="0" oninput="calcVenda()"></div>
       <div class="fgp s2"><label>Comprador *</label><input id="mvd-comprador" placeholder="Nome do comprador"></div>
       <div class="fgp"><label>Forma de Pagamento</label>
@@ -1137,7 +1138,7 @@
       </div>
       <input type="hidden" id="mmov-v">
     </div>
-    <div class="fgp"><label>Data *</label><input id="mmov-data" type="date"></div>
+    <div class="fgp"><label>Data *</label><input id="mmov-data" type="date" min="2020-01-01" max="2035-12-31"></div>
     <div class="fgp s2"><label>Tipo de Movimentação *</label>
       <select id="mmov-tipo" onchange="onMmovTipo()">
         <option>Entrada</option><option>Transferência</option><option>Devolução</option>

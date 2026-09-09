@@ -1,5 +1,5 @@
 import { C, SESSION } from './state.js';
-import { fd, lov, slog, now, esc } from './utils.js';
+import { fd, lov, slog, now, esc, checarDatas } from './utils.js';
 import { FB } from './api.js';
 import { sbReq } from './api.js';
 
@@ -142,6 +142,7 @@ export async function salvarMov(){
     const origemE=document.getElementById('mmov-origem').value.trim();
     const destinoE=document.getElementById('mmov-destino').value.trim();
     if(!dataE||!origemE||!destinoE){window.toast('Data, origem e destino são obrigatórios!','e');return;}
+    if(!checarDatas([dataE,'Data da movimentação']))return;
     const pe={
       data_movimentacao:dataE,
       tipo_movimentacao:document.getElementById('mmov-tipo').value,
@@ -180,6 +181,7 @@ export async function salvarMov(){
   }
   const vid=document.getElementById('mmov-v').value;
   const data=document.getElementById('mmov-data').value;
+  if(!checarDatas([data,'Data da movimentação']))return;
   const tipoMov=document.getElementById('mmov-tipo').value;
   const origem=document.getElementById('mmov-origem').value.trim();
   const destino=document.getElementById('mmov-destino').value.trim();

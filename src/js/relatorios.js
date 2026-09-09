@@ -1,5 +1,5 @@
 import { C, SESSION } from './state.js';
-import { cur, fd, now, gV, gCT, gLoc, gCC, slog, toast } from './utils.js';
+import { cur, fd, now, gV, gCT, gLoc, gCC, slog, toast, mNoMes, mesRefM } from './utils.js';
 
 export const RELS=[
   {id:'analitico',  icon:'🚗', title:'Analítico de Veículos', desc:'Custo individual por veículo com todos os detalhes'},
@@ -45,8 +45,11 @@ export function filtrarDados(tipo){
   let manut=C.m.filter(m=>vids.has(String(m.veiculo_id)));
   let multas=(C.mt||[]).filter(m=>m.veiculo_id!=null&&vids.has(String(m.veiculo_id)));
   if(f.di||f.df){
+    // Período de análise: manutenção pela DATA DE PAGAMENTO (regra oficial) —
+    // OS sem pagamento ficam de fora. Combustível e multas não têm campo de
+    // pagamento no banco e seguem pela data própria.
     abast=abast.filter(a=>dentroData(a.data));
-    manut=manut.filter(m=>dentroData(m.data));
+    manut=manut.filter(m=>m.data_pagamento&&dentroData(m.data_pagamento));
     multas=multas.filter(m=>dentroData(m.data_infracao));
   }
   // Filtros específicos de manutenção
@@ -146,13 +149,14 @@ export function previewRel(tipo){
       return[v.placa,v.modelo,cls,gCT(v.contrato_id).nome_contrato,gLoc(v.localidade_id).nome_localidade,abast.filter(a=>a.veiculo_id==v.id).length,manut.filter(m=>m.veiculo_id==v.id).length,cur(ca),cur(cm),cur(loc),cur(cm+ca+loc)];
     }).sort((a,b)=>b[10]>a[10]?1:-1);
   } else if(tipo==='mensal'){
-    headers=['Mês','Abastecimentos','Manutenções','Comb R$','Manut R$','Total R$'];
-    const mset=[...new Set([...abast.map(a=>a.data?.slice(0,7)),...manut.map(m=>m.data?.slice(0,7))].filter(Boolean))].sort().reverse();
+    headers=['Mês (manut. por pagamento)','Abastecimentos','Manutenções','Comb R$','Manut R$','Total R$'];
+    // Manutenção entra pelo mês da DATA DE PAGAMENTO; combustível pela data própria.
+    const mset=[...new Set([...abast.map(a=>a.data?.slice(0,7)),...manut.map(m=>mesRefM(m))].filter(Boolean))].sort().reverse();
     rows=mset.map(m=>{
       const ca=abast.filter(a=>a.data?.startsWith(m)).reduce((s,a)=>s+Number(a.valor_total),0);
-      const cm=manut.filter(x=>x.data?.startsWith(m)).reduce((s,x)=>s+Number(x.valor),0);
+      const cm=manut.filter(x=>mNoMes(x,m)).reduce((s,x)=>s+Number(x.valor),0);
       const[y,mo]=m.split('-');
-      return[`${mo}/${y}`,abast.filter(a=>a.data?.startsWith(m)).length,manut.filter(x=>x.data?.startsWith(m)).length,cur(ca),cur(cm),cur(ca+cm)];
+      return[`${mo}/${y}`,abast.filter(a=>a.data?.startsWith(m)).length,manut.filter(x=>mNoMes(x,m)).length,cur(ca),cur(cm),cur(ca+cm)];
     });
   } else if(tipo==='status'){
     headers=['Placa','Modelo','Tipo','Contrato','Localidade','Status','KM Atual','Responsável','Tipo Frota'];
@@ -259,8 +263,11 @@ export function filtrarGraf(){
   let manut=C.m.filter(m=>vids.has(String(m.veiculo_id)));
   let multas=(C.mt||[]).filter(m=>m.veiculo_id!=null&&vids.has(String(m.veiculo_id)));
   if(f.di||f.df){
+    // Período de análise: manutenção pela DATA DE PAGAMENTO (regra oficial) —
+    // OS sem pagamento ficam de fora. Combustível e multas não têm campo de
+    // pagamento no banco e seguem pela data própria.
     abast=abast.filter(a=>dentroData(a.data));
-    manut=manut.filter(m=>dentroData(m.data));
+    manut=manut.filter(m=>m.data_pagamento&&dentroData(m.data_pagamento));
     multas=multas.filter(m=>dentroData(m.data_infracao));
   }
   return{veics,vids,abast,manut,multas,f};

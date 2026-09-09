@@ -1,5 +1,5 @@
 import { C, SESSION } from './state.js';
-import { cur, fd, lov, slog, now, esc } from './utils.js';
+import { cur, fd, lov, slog, now, esc, checarDatas } from './utils.js';
 import { FB } from './api.js';
 import { dispararNotificacao } from './notificacoes.js';
 
@@ -97,6 +97,7 @@ export async function salvarMulta(){
   if(!num){window.toast('Informe o número da multa!','e');return;}
   if(!val||val<=0){window.toast('Informe o valor!','e');return;}
   if(!data){window.toast('Informe a data!','e');return;}
+  if(!checarDatas([data,'Data da infração']))return;
   if(!local){window.toast('Informe o local!','e');return;}
   if(!orgao){window.toast('Informe o órgão autuador!','e');return;}
   const p={

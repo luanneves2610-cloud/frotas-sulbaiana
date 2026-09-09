@@ -15,6 +15,44 @@ export const gCC = id => C.cc.find(x=>x.id==id)||{nome:'—'};
 export const costV = id => C.m.filter(x=>x.veiculo_id==id).reduce((s,x)=>s+Number(x.valor),0)+C.a.filter(x=>x.veiculo_id==id).reduce((s,x)=>s+Number(x.valor_total),0);
 export const normStr = s => String(s||'').trim().toUpperCase();
 
+// ── Mês de referência para análise (regra oficial 09/2026) ────────────────
+// Manutenção é contabilizada SEMPRE pelo mês da DATA DE PAGAMENTO, nunca pela
+// data de execução do serviço: OS executada em 25/08 e paga em 05/09 entra em
+// SETEMBRO. OS sem data_pagamento não pertencem a mês nenhum — ficam fora de
+// toda visão mensal e só aparecem no "Total Geral"/sem filtro. O volume que
+// isso representa é exibido como aviso no dashboard e na aba Manutenção.
+// Abastecimento, multas e vendas não possuem campo de pagamento no banco;
+// seguem pela data própria e a UI rotula a base de cada indicador.
+export const mNoMes    = (m, mes) => !!m.data_pagamento && m.data_pagamento.startsWith(mes);
+export const mesRefM   = m => m.data_pagamento?.slice(0,7) || null;
+export const semPagto  = arr => arr.filter(m => !m.data_pagamento);
+export const totalSemPagto = arr => semPagto(arr).reduce((s,m) => s + Number(m.valor||0), 0);
+
+// ── Validação de data (camada 2 de 3) ─────────────────────────────────────
+// O <input type="date"> do Chrome aceita até 6 dígitos no campo de ano, então
+// digitação rápida produz 20265-01-06, 42026-02-18 ou 0002-03-19 sem qualquer
+// aviso. Esta checagem espelha o CHECK do banco (faixa 2020–2035) para que o
+// usuário veja uma mensagem clara no formulário, em vez do erro cru da API.
+export const DATA_MIN = '2020-01-01', DATA_MAX = '2035-12-31';
+export function validarData(v, label='Data'){
+  if(!v) return null;                       // campo opcional vazio é válido
+  const s = String(v).trim();
+  const [ano, mes, dia] = s.split('-');
+  if(!ano || !mes || !dia || ano.length !== 4 || isNaN(Number(ano)))
+    return `${label} inválida: o ano "${ano||''}" tem ${(ano||'').length} dígito(s). Digite um ano de 4 dígitos, como 2026.`;
+  if(s.slice(0,10) < DATA_MIN || s.slice(0,10) > DATA_MAX)
+    return `${label} fora da faixa permitida (ano ${ano}). Confira se o ano foi digitado corretamente.`;
+  return null;
+}
+// Valida vários campos; exibe o primeiro erro e devolve false para abortar o salvamento.
+export function checarDatas(...pares){
+  for(const [v, label] of pares){
+    const erro = validarData(v, label);
+    if(erro){ toast(erro, 'e'); return false; }
+  }
+  return true;
+}
+
 // Regras de senha — espelham as políticas do Supabase Auth
 // (Minimum password length = 8, Password requirements = "Letters and digits").
 // Retorna null se válida, ou a mensagem de erro.
@@ -58,4 +96,10 @@ window.gLoc = gLoc;
 window.gCC = gCC;
 window.costV = costV;
 window.normStr = normStr;
+window.mNoMes = mNoMes;
+window.mesRefM = mesRefM;
+window.semPagto = semPagto;
+window.totalSemPagto = totalSemPagto;
+window.validarData = validarData;
+window.checarDatas = checarDatas;
 window.validarSenha = validarSenha;

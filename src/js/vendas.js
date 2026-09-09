@@ -1,5 +1,5 @@
 import { C, SESSION } from './state.js';
-import { cur, fd, lov, slog, now } from './utils.js';
+import { cur, fd, lov, slog, now, checarDatas } from './utils.js';
 import { FB } from './api.js';
 
 let _evd=null;
@@ -77,6 +77,7 @@ export async function salvarVenda(){
   if(!vid){window.toast('Selecione um veículo!','e');return;}
   if(!valor||valor<=0){window.toast('Informe o valor de venda!','e');return;}
   if(!comprador){window.toast('Informe o comprador!','e');return;}
+  if(!checarDatas([data,'Data da venda']))return;
   const v=window.gV(vid);
   const custo=window.costV(vid);
   const p={

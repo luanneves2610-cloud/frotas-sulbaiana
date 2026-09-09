@@ -1,5 +1,5 @@
 import { C, SESSION } from './state.js';
-import { cur, fd, lov, slog, now, esc } from './utils.js';
+import { cur, fd, lov, slog, now, esc, mNoMes, semPagto, totalSemPagto, checarDatas } from './utils.js';
 import { FB } from './api.js';
 
 let _em=null;
@@ -15,13 +15,16 @@ export function renderM(){
   if(b)d=d.filter(m=>{const v=window.gV(m.veiculo_id);return v.placa?.toLowerCase().includes(b)||m.tipo_servico?.toLowerCase().includes(b)||(m.descricao||'').toLowerCase().includes(b);});
   if(fct)d=d.filter(m=>window.gV(m.veiculo_id).contrato_id==fct);
   if(tp)d=d.filter(m=>m.tipo_servico===tp);
-  if(mes)d=d.filter(m=>m.data?.startsWith(mes));
+  // Mês = DATA DE PAGAMENTO (regra oficial). OS sem pagamento ficam fora do mês.
+  let foraDoMes=[];
+  if(mes){foraDoMes=semPagto(d);d=d.filter(m=>mNoMes(m,mes));}
   // Período de pagamento — OS sem data_pagamento ficam de fora quando o filtro é usado
   if(pagDi)d=d.filter(m=>m.data_pagamento&&m.data_pagamento.slice(0,10)>=pagDi);
   if(pagDf)d=d.filter(m=>m.data_pagamento&&m.data_pagamento.slice(0,10)<=pagDf);
   const tot=d.reduce((s,m)=>s+Number(m.valor),0);
   const filtrandoPagto=pagDi||pagDf;
-  document.getElementById('lm').textContent=`${d.length} OS · Total: ${cur(tot)}${filtrandoPagto?' (por data de pagamento)':''}`;
+  const avisoMes=(mes&&foraDoMes.length)?` · ⚠️ ${foraDoMes.length} OS sem data de pagamento (${cur(totalSemPagto(foraDoMes))}) fora deste mês`:'';
+  document.getElementById('lm').textContent=`${d.length} OS · Total: ${cur(tot)}${mes?' · mês por data de pagamento':''}${filtrandoPagto?' (período de pagamento)':''}${avisoMes}`;
   document.getElementById('tb-m').innerHTML=d.map(m=>{const v=window.gV(m.veiculo_id);const ctNome=esc(v.contratos?.nome_contrato||window.gCT(v.contrato_id).nome_contrato);const locNome=esc(v.localidades?.nome_localidade||window.gLoc(v.localidade_id).nome_localidade);return`<tr><td><strong class="mono t-bl">${esc(v.placa)}</strong></td><td><span class="badge b-ye">${esc(m.tipo_servico)}</span></td><td class="fs11" style="max-width:160px;overflow:hidden;text-overflow:ellipsis">${esc(m.descricao||'—')}</td><td class="fs11"><span class="badge b-bl">${ctNome}</span></td><td class="fs11">📍 ${locNome}</td><td>${fd(m.data)}</td><td>${m.data_pagamento?`<span class="badge b-gr">${fd(m.data_pagamento)}</span>`:'<span class="t-tm">—</span>'}</td><td class="mono">${(m.km||0).toLocaleString('pt-BR')}</td><td class="t-or fw7 mono">${cur(m.valor)}</td><td>${m.nf?`<span class="badge b-gr">📎</span>`:'—'}</td><td><div style="display:flex;gap:4px"><button class="btn btn-g btn-sm btn-ic" onclick="editM('${m.id}')">✏️</button><button class="btn btn-sm btn-ic" style="background:#fef2f2;color:#dc2626;border:1px solid #fecaca" onclick="solicitarDelOS('${m.id}')">🗑️</button></div></td></tr>`;}).join('')||'<tr><td colspan="11" style="text-align:center;padding:32px;color:var(--tm)">Nenhuma OS</td></tr>';
 }
 
@@ -92,6 +95,7 @@ export async function salvarM(){
   const nf=document.getElementById('mm-nf').files[0];
   const _lado=document.getElementById('mm-lado-box').style.display!=='none'?document.getElementById('mm-lado').value:null;
   const dpag=document.getElementById('mm-dpag').value||null;
+  if(!checarDatas([document.getElementById('mm-data').value,'Data de execução'],[dpag,'Data de pagamento']))return;
   const p={veiculo_id:vid,tipo_servico:document.getElementById('mm-tip').value+((_lado)?` — ${_lado}`:''),descricao:document.getElementById('mm-desc').value,data:document.getElementById('mm-data').value,data_pagamento:dpag,km:km,valor:val,centro_custo_id:document.getElementById('mm-cc').value||C.v.find(x=>x.id==vid)?.centro_custo_id||null,nf:nf?nf.name:(_em?.nf||''),usuario_id:SESSION.id};
   if(!_em)p.data_lancamento=now();// preserva a data de lançamento original ao editar
   _saving=true;lov(true);

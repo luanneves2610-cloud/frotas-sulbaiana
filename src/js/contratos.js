@@ -1,5 +1,5 @@
 import { C, SESSION } from './state.js';
-import { cur, fd, lov, slog, now, esc } from './utils.js';
+import { cur, fd, lov, slog, now, esc, checarDatas } from './utils.js';
 import { FB } from './api.js';
 
 let _ect=null;
@@ -21,7 +21,7 @@ export function abrirMCT(){_ect=null;document.getElementById('mct-t').textConten
 
 export function editCT(id){_ect=C.ct.find(x=>x.id==id);if(!_ect)return;document.getElementById('mct-t').textContent=`✏️ ${_ect.nome_contrato}`;document.getElementById('mct-n').value=_ect.nome_contrato;document.getElementById('mct-num').value=_ect.numero_contrato||'';document.getElementById('mct-d').value=_ect.descricao||'';document.getElementById('mct-di').value=_ect.data_inicio||'';document.getElementById('mct-df').value=_ect.data_fim||'';document.getElementById('mct-st').value=_ect.status;window.oMo('mo-ct');}
 
-export async function salvarCT(){const nome=document.getElementById('mct-n').value.trim();if(!nome){window.toast('Informe o nome!','e');return;}const p={nome_contrato:nome,numero_contrato:document.getElementById('mct-num').value,descricao:document.getElementById('mct-d').value,data_inicio:document.getElementById('mct-di').value||null,data_fim:document.getElementById('mct-df').value||null,status:document.getElementById('mct-st').value};lov(true);try{if(_ect)await FB.upd('contratos',_ect.id,p);else await FB.add('contratos',p);slog(`Contrato ${_ect?'editado':'criado'}: ${nome}`);await window.loadAll();window.cMo('mo-ct');renderCT();window.toast('✅ Contrato salvo!');}catch(e){window.toast('Erro: '+e.message,'e');}finally{lov(false);}};
+export async function salvarCT(){const nome=document.getElementById('mct-n').value.trim();if(!nome){window.toast('Informe o nome!','e');return;}if(!checarDatas([document.getElementById('mct-di').value,'Data de início'],[document.getElementById('mct-df').value,'Data de fim']))return;const p={nome_contrato:nome,numero_contrato:document.getElementById('mct-num').value,descricao:document.getElementById('mct-d').value,data_inicio:document.getElementById('mct-di').value||null,data_fim:document.getElementById('mct-df').value||null,status:document.getElementById('mct-st').value};lov(true);try{if(_ect)await FB.upd('contratos',_ect.id,p);else await FB.add('contratos',p);slog(`Contrato ${_ect?'editado':'criado'}: ${nome}`);await window.loadAll();window.cMo('mo-ct');renderCT();window.toast('✅ Contrato salvo!');}catch(e){window.toast('Erro: '+e.message,'e');}finally{lov(false);}};
 
 export async function togCT(id){const ct=C.ct.find(x=>x.id==id);if(!ct)return;lov(true);try{await FB.upd('contratos',id,{status:ct.status==='ativo'?'inativo':'ativo'});await window.loadAll();renderCT();window.toast('✅ Atualizado');}catch(e){window.toast(e.message,'e');}finally{lov(false);}};
 
