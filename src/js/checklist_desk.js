@@ -41,8 +41,10 @@ export async function renderChecklist_desk(){
   if(selV){
     const vAtual=selV.value;
     const veicsFiltrados=fct?C.v.filter(v=>v.contrato_id==fct):C.v;
-    selV.innerHTML='<option value="">Todos os veículos</option>';
-    veicsFiltrados.forEach(x=>{selV.innerHTML+=`<option value="${x.id}">${x.placa} — ${x.modelo}</option>`;});
+    // Uma atribuição só: `innerHTML +=` no loop reprocessa a lista inteira a
+    // cada veículo (custo quadrático, ~400 veículos) — mesmo bug da aba Manutenção.
+    selV.innerHTML='<option value="">Todos os veículos</option>'
+      +veicsFiltrados.map(x=>`<option value="${x.id}">${x.placa} — ${x.modelo}</option>`).join('');
     selV.value=vAtual;
     selV.onchange=renderChecklist_desk;
   }
