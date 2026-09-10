@@ -1,5 +1,5 @@
 import { C, SESSION } from './state.js';
-import { cur, fd, lov, slog, now, esc, mNoMes, semPagto, totalSemPagto, checarDatas } from './utils.js';
+import { cur, fd, lov, slog, now, esc, mNoMes, pendentesDoMes, somaValor, checarDatas } from './utils.js';
 import { FB } from './api.js';
 
 let _em=null;
@@ -16,14 +16,14 @@ export function renderM(){
   if(fct)d=d.filter(m=>window.gV(m.veiculo_id).contrato_id==fct);
   if(tp)d=d.filter(m=>m.tipo_servico===tp);
   // Mês = DATA DE PAGAMENTO (regra oficial). OS sem pagamento ficam fora do mês.
-  let foraDoMes=[];
-  if(mes){foraDoMes=semPagto(d);d=d.filter(m=>mNoMes(m,mes));}
+  let pendentes=[];
+  if(mes){pendentes=pendentesDoMes(d,mes);d=d.filter(m=>mNoMes(m,mes));}
   // Período de pagamento — OS sem data_pagamento ficam de fora quando o filtro é usado
   if(pagDi)d=d.filter(m=>m.data_pagamento&&m.data_pagamento.slice(0,10)>=pagDi);
   if(pagDf)d=d.filter(m=>m.data_pagamento&&m.data_pagamento.slice(0,10)<=pagDf);
   const tot=d.reduce((s,m)=>s+Number(m.valor),0);
   const filtrandoPagto=pagDi||pagDf;
-  const avisoMes=(mes&&foraDoMes.length)?` · ⚠️ ${foraDoMes.length} OS sem data de pagamento (${cur(totalSemPagto(foraDoMes))}) fora deste mês`:'';
+  const avisoMes=(mes&&pendentes.length)?` · ⚠️ ${pendentes.length} OS executada(s) neste mês sem pagamento lançado (${cur(somaValor(pendentes))})`:'';
   document.getElementById('lm').textContent=`${d.length} OS · Total: ${cur(tot)}${mes?' · mês por data de pagamento':''}${filtrandoPagto?' (período de pagamento)':''}${avisoMes}`;
   document.getElementById('tb-m').innerHTML=d.map(m=>{const v=window.gV(m.veiculo_id);const ctNome=esc(v.contratos?.nome_contrato||window.gCT(v.contrato_id).nome_contrato);const locNome=esc(v.localidades?.nome_localidade||window.gLoc(v.localidade_id).nome_localidade);return`<tr><td><strong class="mono t-bl">${esc(v.placa)}</strong></td><td><span class="badge b-ye">${esc(m.tipo_servico)}</span></td><td class="fs11" style="max-width:160px;overflow:hidden;text-overflow:ellipsis">${esc(m.descricao||'—')}</td><td class="fs11"><span class="badge b-bl">${ctNome}</span></td><td class="fs11">📍 ${locNome}</td><td>${fd(m.data)}</td><td>${m.data_pagamento?`<span class="badge b-gr">${fd(m.data_pagamento)}</span>`:'<span class="t-tm">—</span>'}</td><td class="mono">${(m.km||0).toLocaleString('pt-BR')}</td><td class="t-or fw7 mono">${cur(m.valor)}</td><td>${m.nf?`<span class="badge b-gr">📎</span>`:'—'}</td><td><div style="display:flex;gap:4px"><button class="btn btn-g btn-sm btn-ic" onclick="editM('${m.id}')">✏️</button><button class="btn btn-sm btn-ic" style="background:#fef2f2;color:#dc2626;border:1px solid #fecaca" onclick="solicitarDelOS('${m.id}')">🗑️</button></div></td></tr>`;}).join('')||'<tr><td colspan="11" style="text-align:center;padding:32px;color:var(--tm)">Nenhuma OS</td></tr>';
 }

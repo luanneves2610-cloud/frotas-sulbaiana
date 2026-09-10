@@ -25,8 +25,11 @@ export const normStr = s => String(s||'').trim().toUpperCase();
 // seguem pela data própria e a UI rotula a base de cada indicador.
 export const mNoMes    = (m, mes) => !!m.data_pagamento && m.data_pagamento.startsWith(mes);
 export const mesRefM   = m => m.data_pagamento?.slice(0,7) || null;
-export const semPagto  = arr => arr.filter(m => !m.data_pagamento);
-export const totalSemPagto = arr => semPagto(arr).reduce((s,m) => s + Number(m.valor||0), 0);
+// OS EXECUTADAS no mês selecionado que ainda não tiveram o pagamento lançado.
+// Elas não entram na análise do mês (a referência é a data de pagamento); o
+// aviso serve para responder "o que rodou neste mês e segue em aberto".
+export const pendentesDoMes = (arr, mes) => arr.filter(m => !m.data_pagamento && m.data?.startsWith(mes));
+export const somaValor = arr => arr.reduce((s,m) => s + Number(m.valor||0), 0);
 
 // ── Validação de data (camada 2 de 3) ─────────────────────────────────────
 // O <input type="date"> do Chrome aceita até 6 dígitos no campo de ano, então
@@ -98,8 +101,8 @@ window.costV = costV;
 window.normStr = normStr;
 window.mNoMes = mNoMes;
 window.mesRefM = mesRefM;
-window.semPagto = semPagto;
-window.totalSemPagto = totalSemPagto;
+window.pendentesDoMes = pendentesDoMes;
+window.somaValor = somaValor;
 window.validarData = validarData;
 window.checarDatas = checarDatas;
 window.validarSenha = validarSenha;

@@ -1,5 +1,5 @@
 import { C, SESSION } from './state.js';
-import { cur, curMonth, fd, toast, mNoMes, semPagto, totalSemPagto } from './utils.js';
+import { cur, curMonth, fd, toast, mNoMes, pendentesDoMes, somaValor } from './utils.js';
 import { supabase } from './config.js';
 import { dispararNotificacao } from './notificacoes.js';
 
@@ -109,12 +109,12 @@ export function renderDash() {
   // Aviso — OS fora da análise por não terem data de pagamento (regra oficial)
   const avisoEl = document.getElementById('dash-aviso-pagto');
   if (avisoEl) {
-    const pend    = mes ? semPagto(mF) : [];
-    const pendVal = mes ? totalSemPagto(mF) : 0;
+    const pend    = mes ? pendentesDoMes(mF, mes) : [];
+    const pendVal = somaValor(pend);
     avisoEl.innerHTML = pend.length
       ? `<div style="background:#fffbeb;border:1px solid #fde68a;border-radius:8px;padding:10px 14px;margin-bottom:12px;font-size:12px;display:flex;align-items:center;gap:8px;flex-wrap:wrap">
            <span style="font-size:15px">⚠️</span>
-           <span style="color:#92400e"><strong>${pend.length} ${pend.length===1?'OS está':'OS estão'} sem data de pagamento</strong> — ${cur(pendVal)} fora das análises mensais. As análises usam a data de pagamento como referência; use "Sem filtro" para ver o total geral.</span>
+           <span style="color:#92400e"><strong>${pend.length} ${pend.length===1?'OS executada':'OS executadas'} em ${lbl} ${pend.length===1?'segue':'seguem'} sem pagamento lançado</strong> — ${cur(pendVal)} em aberto. Como a análise usa a data de pagamento, ${pend.length===1?'ela entrará':'elas entrarão'} no mês em que o pagamento for registrado.</span>
          </div>`
       : '';
   }
