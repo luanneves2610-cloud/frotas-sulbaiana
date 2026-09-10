@@ -4,6 +4,10 @@ import { FB } from './api.js';
 
 let _em=null;
 let _saving=false;
+// Filtro "sem pagamento": a aba Manutenção também é a tela de lançamento, e a
+// OS sem data de pagamento não cabe em nenhum mês — sem este atalho ela ficaria
+// invisível justamente para quem precisa abrir a OS e lançar a data.
+let _soSemPagto=false;
 
 export function renderM(){
   window.populateSel();
@@ -15,17 +19,42 @@ export function renderM(){
   if(b)d=d.filter(m=>{const v=window.gV(m.veiculo_id);return v.placa?.toLowerCase().includes(b)||m.tipo_servico?.toLowerCase().includes(b)||(m.descricao||'').toLowerCase().includes(b);});
   if(fct)d=d.filter(m=>window.gV(m.veiculo_id).contrato_id==fct);
   if(tp)d=d.filter(m=>m.tipo_servico===tp);
-  // Mês = DATA DE PAGAMENTO (regra oficial). OS sem pagamento ficam fora do mês.
+  // Modo "sem pagamento": ignora mês e período de pagamento, que por definição
+  // excluem justamente as OS que precisam ser lançadas.
   let pendentes=[];
-  if(mes){pendentes=pendentesDoMes(d,mes);d=d.filter(m=>mNoMes(m,mes));}
-  // Período de pagamento — OS sem data_pagamento ficam de fora quando o filtro é usado
-  if(pagDi)d=d.filter(m=>m.data_pagamento&&m.data_pagamento.slice(0,10)>=pagDi);
-  if(pagDf)d=d.filter(m=>m.data_pagamento&&m.data_pagamento.slice(0,10)<=pagDf);
+  if(_soSemPagto){
+    d=d.filter(m=>!m.data_pagamento);
+  }else{
+    // Mês = DATA DE PAGAMENTO (regra oficial). OS sem pagamento ficam fora do mês.
+    if(mes){pendentes=pendentesDoMes(d,mes);d=d.filter(m=>mNoMes(m,mes));}
+    // Período de pagamento — OS sem data_pagamento ficam de fora quando o filtro é usado
+    if(pagDi)d=d.filter(m=>m.data_pagamento&&m.data_pagamento.slice(0,10)>=pagDi);
+    if(pagDf)d=d.filter(m=>m.data_pagamento&&m.data_pagamento.slice(0,10)<=pagDf);
+  }
   const tot=d.reduce((s,m)=>s+Number(m.valor),0);
   const filtrandoPagto=pagDi||pagDf;
-  const avisoMes=(mes&&pendentes.length)?` · ⚠️ ${pendentes.length} OS executada(s) neste mês sem pagamento lançado (${cur(somaValor(pendentes))})`:'';
-  document.getElementById('lm').textContent=`${d.length} OS · Total: ${cur(tot)}${mes?' · mês por data de pagamento':''}${filtrandoPagto?' (período de pagamento)':''}${avisoMes}`;
+  const avisoMes=(mes&&pendentes.length)?` · ⚠️ ${pendentes.length} OS executada(s) neste mês sem pagamento lançado (${cur(somaValor(pendentes))}) — use "⚠️ Sem pagamento" para lançá-las`:'';
+  document.getElementById('lm').textContent=_soSemPagto
+    ? `⚠️ ${d.length} OS aguardando data de pagamento · Total: ${cur(tot)} — abra cada uma no ✏️ e informe a data`
+    : `${d.length} OS · Total: ${cur(tot)}${mes?' · mês por data de pagamento':''}${filtrandoPagto?' (período de pagamento)':''}${avisoMes}`;
   document.getElementById('tb-m').innerHTML=d.map(m=>{const v=window.gV(m.veiculo_id);const ctNome=esc(v.contratos?.nome_contrato||window.gCT(v.contrato_id).nome_contrato);const locNome=esc(v.localidades?.nome_localidade||window.gLoc(v.localidade_id).nome_localidade);return`<tr><td><strong class="mono t-bl">${esc(v.placa)}</strong></td><td><span class="badge b-ye">${esc(m.tipo_servico)}</span></td><td class="fs11" style="max-width:160px;overflow:hidden;text-overflow:ellipsis">${esc(m.descricao||'—')}</td><td class="fs11"><span class="badge b-bl">${ctNome}</span></td><td class="fs11">📍 ${locNome}</td><td>${fd(m.data)}</td><td>${m.data_pagamento?`<span class="badge b-gr">${fd(m.data_pagamento)}</span>`:'<span class="t-tm">—</span>'}</td><td class="mono">${(m.km||0).toLocaleString('pt-BR')}</td><td class="t-or fw7 mono">${cur(m.valor)}</td><td>${m.nf?`<span class="badge b-gr">📎</span>`:'—'}</td><td><div style="display:flex;gap:4px"><button class="btn btn-g btn-sm btn-ic" onclick="editM('${m.id}')">✏️</button><button class="btn btn-sm btn-ic" style="background:#fef2f2;color:#dc2626;border:1px solid #fecaca" onclick="solicitarDelOS('${m.id}')">🗑️</button></div></td></tr>`;}).join('')||'<tr><td colspan="11" style="text-align:center;padding:32px;color:var(--tm)">Nenhuma OS</td></tr>';
+}
+
+// Liga/desliga a listagem das OS pendentes de pagamento.
+export function toggleSemPagto(){
+  _soSemPagto=!_soSemPagto;
+  const btn=document.getElementById('fm-pend-btn');
+  if(btn){
+    btn.style.background  = _soSemPagto?'#f59e0b':'';
+    btn.style.color       = _soSemPagto?'#fff':'';
+    btn.style.borderColor = _soSemPagto?'#f59e0b':'';
+  }
+  // Os filtros de mês e de período de pagamento não fazem sentido neste modo
+  ['fm-m','fm-pag-di','fm-pag-df'].forEach(id=>{
+    const el=document.getElementById(id);
+    if(el){el.disabled=_soSemPagto;el.style.opacity=_soSemPagto?.5:1;}
+  });
+  renderM();
 }
 
 export function limparFiltroPagto(){
@@ -221,6 +250,7 @@ export async function confirmarDelOS(){
 // Make globally accessible
 window.renderM = renderM;
 window.limparFiltroPagto = limparFiltroPagto;
+window.toggleSemPagto = toggleSemPagto;
 window.abrirMM = abrirMM;
 window.editM = editM;
 window.salvarM = salvarM;

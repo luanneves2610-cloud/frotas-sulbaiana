@@ -391,6 +391,7 @@
           <span style="font-size:11px;color:var(--tm)">até</span>
           <input type="date" min="2020-01-01" max="2035-12-31" id="fm-pag-df" onchange="renderM()" style="background:var(--s1);border:1px solid var(--b2);padding:7px 11px;font-size:13px" title="Pagamento até">
           <button class="btn btn-g btn-sm" onclick="limparFiltroPagto()" title="Limpar filtro de pagamento">✕</button>
+          <button class="btn btn-g btn-sm" id="fm-pend-btn" onclick="toggleSemPagto()" title="Listar as OS que ainda não têm data de pagamento, para lançá-la">⚠️ Sem pagamento</button>
           <div class="fsep"></div>
           <button class="btn btn-p btn-sm" onclick="abrirMM()">➕ Nova OS</button>
           <button class="btn btn-xl btn-sm" onclick="exportarExcel('manutencao')">📊 Exportar</button>
