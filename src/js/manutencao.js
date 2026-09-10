@@ -10,7 +10,9 @@ let _saving=false;
 let _soSemPagto=false;
 
 export function renderM(){
-  window.populateSel();
+  // Sem populateSel() aqui: os selects já são preenchidos ao abrir a aba
+  // (showPage) e após cada loadAll. Repreencher a cada render — ou seja, a cada
+  // tecla na busca — era a maior parte da lentidão da aba.
   const b=document.getElementById('fm-b').value.toLowerCase(),fct=document.getElementById('fm-ct').value;
   const tp=document.getElementById('fm-t').value,mes=document.getElementById('fm-m').value;
   const pagDi=document.getElementById('fm-pag-di')?.value||'';
@@ -39,6 +41,11 @@ export function renderM(){
     : `${d.length} OS · Total: ${cur(tot)}${mes?' · mês por data de pagamento':''}${filtrandoPagto?' (período de pagamento)':''}${avisoMes}`;
   document.getElementById('tb-m').innerHTML=d.map(m=>{const v=window.gV(m.veiculo_id);const ctNome=esc(v.contratos?.nome_contrato||window.gCT(v.contrato_id).nome_contrato);const locNome=esc(v.localidades?.nome_localidade||window.gLoc(v.localidade_id).nome_localidade);return`<tr><td><strong class="mono t-bl">${esc(v.placa)}</strong></td><td><span class="badge b-ye">${esc(m.tipo_servico)}</span></td><td class="fs11" style="max-width:160px;overflow:hidden;text-overflow:ellipsis">${esc(m.descricao||'—')}</td><td class="fs11"><span class="badge b-bl">${ctNome}</span></td><td class="fs11">📍 ${locNome}</td><td>${fd(m.data)}</td><td>${m.data_pagamento?`<span class="badge b-gr">${fd(m.data_pagamento)}</span>`:'<span class="t-tm">—</span>'}</td><td class="mono">${(m.km||0).toLocaleString('pt-BR')}</td><td class="t-or fw7 mono">${cur(m.valor)}</td><td>${m.nf?`<span class="badge b-gr">📎</span>`:'—'}</td><td><div style="display:flex;gap:4px"><button class="btn btn-g btn-sm btn-ic" onclick="editM('${m.id}')">✏️</button><button class="btn btn-sm btn-ic" style="background:#fef2f2;color:#dc2626;border:1px solid #fecaca" onclick="solicitarDelOS('${m.id}')">🗑️</button></div></td></tr>`;}).join('')||'<tr><td colspan="11" style="text-align:center;padding:32px;color:var(--tm)">Nenhuma OS</td></tr>';
 }
+
+// Busca: espera a pessoa parar de digitar antes de redesenhar a tabela,
+// em vez de reconstruir as 1.358 linhas a cada tecla.
+let _tBusca=null;
+export function buscarM(){clearTimeout(_tBusca);_tBusca=setTimeout(renderM,200);}
 
 // Liga/desliga a listagem das OS pendentes de pagamento.
 export function toggleSemPagto(){
@@ -251,6 +258,7 @@ export async function confirmarDelOS(){
 window.renderM = renderM;
 window.limparFiltroPagto = limparFiltroPagto;
 window.toggleSemPagto = toggleSemPagto;
+window.buscarM = buscarM;
 window.abrirMM = abrirMM;
 window.editM = editM;
 window.salvarM = salvarM;
