@@ -178,20 +178,67 @@ export async function esqueciSenha() {
   }
 }
 
-// ── Detecta chegada por link de recuperação (#type=recovery) ───────────────
-async function _checkRecovery() {
-  const hash = window.location.hash || '';
-  if (!hash.includes('type=recovery')) return false;
+// ── Mensagem na tela de login, sem modal ───────────────────────────────────
+function _erroNoLogin(msg) {
+  history.replaceState(null, '', window.location.pathname);
+  lov(false);
+  document.getElementById('login-screen').style.display = 'flex';
+  document.getElementById('app').style.display = 'none';
+  const el = document.getElementById('lerr');
+  el.style.color = '#dc2626';
+  el.textContent = msg;
+  el.style.display = 'block';
+}
 
-  const params = new URLSearchParams(hash.slice(1));
-  const access_token = params.get('access_token');
-  const refresh_token = params.get('refresh_token');
-  if (!access_token) return false;
+// ── Detecta chegada por link de recuperação ────────────────────────────────
+// O Supabase pode devolver o resultado de quatro formas, e antes só a primeira
+// era tratada — as outras caíam num `return false` mudo, que mostra a tela de
+// login comum e faz parecer que o link não fez nada:
+//   1. #access_token=...&type=recovery      (fluxo implícito, o padrão daqui)
+//   2. #error=...&error_code=otp_expired    (link expirado OU já consumido)
+//   3. ?code=...                            (fluxo PKCE)
+//   4. ?token_hash=...&type=recovery        (verificação por token_hash)
+// O caso 2 é o mais comum na prática: o antivírus de links do Gmail abre o
+// e-mail antes do destinatário e queima o token de uso único.
+async function _checkRecovery() {
+  const hp = new URLSearchParams((window.location.hash || '').replace(/^#/, ''));
+  const qp = new URLSearchParams(window.location.search || '');
+  const get = k => hp.get(k) || qp.get(k);
+
+  // 2) Link morto — precisa dizer isso em vez de mostrar a tela de login limpa
+  const erro = get('error') || get('error_description');
+  if (erro) {
+    const ctx = `${get('error_code') || ''} ${erro}`;
+    console.error('Recovery link error:', ctx);
+    _erroNoLogin(/expired|invalid|not_found/i.test(ctx)
+      ? 'Este link de redefinição expirou ou já foi utilizado. Clique em "Esqueci minha senha" para receber um novo e abra sempre o e-mail mais recente.'
+      : 'Não foi possível validar o link de redefinição. Solicite um novo em "Esqueci minha senha".');
+    return true;
+  }
+
+  const tipo = get('type');
+  const access_token = hp.get('access_token');
+  const code = qp.get('code');
+  const token_hash = get('token_hash');
+
+  // Nada de recuperação na URL — segue o fluxo normal de inicialização
+  if (!access_token && !code && !(token_hash && tipo === 'recovery')) return false;
 
   try {
-    await supabase.auth.setSession({ access_token, refresh_token });
+    if (access_token) {
+      if (tipo && tipo !== 'recovery') return false;   // outro tipo de link
+      await supabase.auth.setSession({ access_token, refresh_token: hp.get('refresh_token') });
+    } else if (code) {
+      const { error } = await supabase.auth.exchangeCodeForSession(code);
+      if (error) throw error;
+    } else {
+      const { error } = await supabase.auth.verifyOtp({ token_hash, type: 'recovery' });
+      if (error) throw error;
+    }
   } catch (e) {
-    console.error('Recovery setSession error:', e);
+    console.error('Recovery error:', e);
+    _erroNoLogin('Não foi possível validar o link de redefinição — ele pode ter expirado ou já ter sido usado. Solicite um novo em "Esqueci minha senha".');
+    return true;
   }
 
   // A partir daqui o acesso ao sistema fica bloqueado até a senha ser definida
