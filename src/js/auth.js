@@ -18,7 +18,21 @@ supabase.auth.onAuthStateChange((event, session) => {
   }
 });
 
+// Marca que existe uma sessão de recuperação com a troca de senha ainda pendente.
+// Fica em localStorage (e não em sessionStorage) para sobreviver a recarregamento
+// e a fechar/reabrir o navegador, igual à sessão do próprio Supabase.
+const RECOVERY_FLAG = 'frotas_recovery_pendente';
+
+// Mantém o usuário na tela de login com o modal de nova senha por cima.
+function _exigirNovaSenha() {
+  lov(false);
+  document.getElementById('login-screen').style.display = 'flex';
+  document.getElementById('app').style.display = 'none';
+  document.getElementById('mo-reset').classList.add('open');
+}
+
 function _forceLogout() {
+  localStorage.removeItem(RECOVERY_FLAG);
   clearSession();
   resetC();
   sessionStorage.removeItem('frotas_sb_session');
@@ -39,6 +53,12 @@ export async function initApp() {
 
     if (session) {
       setAuthToken(session.access_token);
+
+      // Sessão criada por link de recuperação com a senha ainda não definida.
+      // Sem esta trava, bastava recarregar a página (que perde o #type=recovery)
+      // para cair direto no sistema e deixar a conta sem senha conhecida por
+      // ninguém — foi o que aconteceu em 09/2026 e exigiu novo reset manual.
+      if (localStorage.getItem(RECOVERY_FLAG)) { _exigirNovaSenha(); return; }
 
       // Tenta restaurar o perfil do sessionStorage
       const saved = sessionStorage.getItem('frotas_sb_session');
@@ -96,6 +116,7 @@ export async function doLogin() {
     }
 
     setAuthToken(authData.session.access_token);
+    localStorage.removeItem(RECOVERY_FLAG); // entrou com senha própria: nada pendente
     await _carregarPerfilPosAuth(email);
 
   } catch (e) {
@@ -173,11 +194,9 @@ async function _checkRecovery() {
     console.error('Recovery setSession error:', e);
   }
 
-  // Mostra a tela de login ao fundo com o modal de nova senha por cima
-  lov(false);
-  document.getElementById('login-screen').style.display = 'flex';
-  document.getElementById('app').style.display = 'none';
-  document.getElementById('mo-reset').classList.add('open');
+  // A partir daqui o acesso ao sistema fica bloqueado até a senha ser definida
+  localStorage.setItem(RECOVERY_FLAG, '1');
+  _exigirNovaSenha();
   return true;
 }
 
@@ -195,7 +214,8 @@ export async function salvarSenhaRecovery() {
     const { error } = await supabase.auth.updateUser({ password: nova });
     if (error) throw error;
 
-    // Limpa o token de recuperação da URL e encerra a sessão temporária
+    // Senha definida: encerra a pendência antes de derrubar a sessão temporária
+    localStorage.removeItem(RECOVERY_FLAG);
     history.replaceState(null, '', window.location.pathname);
     await supabase.auth.signOut();
     setAuthToken(null);
@@ -211,9 +231,32 @@ export async function salvarSenhaRecovery() {
     err.style.display = 'block';
   } catch (e) {
     lov(false);
-    toast('Erro ao salvar a senha: ' + e.message, 'e');
+    const expirou = /expired|invalid|jwt|token/i.test(e.message || '');
+    toast(expirou
+      ? 'O link de redefinição expirou. Volte ao login e clique em "Esqueci minha senha" para receber um novo.'
+      : 'Erro ao salvar a senha: ' + e.message, 'e');
     console.error('salvarSenhaRecovery error:', e);
   }
+}
+
+// ── Sair do modal sem definir a senha ──────────────────────────────────────
+// Encerra a sessão de recuperação e devolve a tela de login. Não enfraquece a
+// trava: sair daqui significa ficar SEM acesso, e não entrar no sistema com a
+// senha por definir. Existe para ninguém ficar preso caso o link expire com o
+// modal aberto.
+export async function cancelarRecovery() {
+  localStorage.removeItem(RECOVERY_FLAG);
+  try { await supabase.auth.signOut(); } catch (e) { /* sessão já inválida */ }
+  setAuthToken(null);
+  history.replaceState(null, '', window.location.pathname);
+  document.getElementById('mo-reset').classList.remove('open');
+  document.getElementById('rs-nova').value = '';
+  document.getElementById('rs-conf').value = '';
+  document.getElementById('login-screen').style.display = 'flex';
+  const err = document.getElementById('lerr');
+  err.style.color = '#dc2626';
+  err.textContent = 'Senha não definida. Clique em "Esqueci minha senha" para receber um novo link.';
+  err.style.display = 'block';
 }
 
 // ── Busca perfil na tabela usuarios após auth bem-sucedido ─────────────────
@@ -356,3 +399,4 @@ window.loadAll = loadAll;
 window.toggleSenhaVis = toggleSenhaVis;
 window.esqueciSenha = esqueciSenha;
 window.salvarSenhaRecovery = salvarSenhaRecovery;
+window.cancelarRecovery = cancelarRecovery;
