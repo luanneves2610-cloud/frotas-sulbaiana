@@ -49,22 +49,43 @@ export function renderMov(){
   }).join('')||'<tr><td colspan="9" style="text-align:center;padding:32px;color:var(--tm)">Nenhuma movimentação registrada</td></tr>';
 }
 
+// Origem/Destino saíram de texto livre para lista dos contratos e localidades
+// cadastrados — o texto livre gerava divergência no mesmo lugar ("EUNAPOLES"
+// no lugar de "EUNAPOLIS"). O valor gravado continua sendo o NOME, exatamente
+// como antes, então nada muda no banco nem nos registros já existentes.
+function _opcoesLocais(atual){
+  const cts =C.ct .filter(x=>x.status==='ativo').map(c=>c.nome_contrato).filter(Boolean);
+  const locs=C.loc.filter(x=>x.status==='ativo').map(l=>l.nome_localidade).filter(Boolean);
+  const grupo=(rot,arr)=>arr.length?`<optgroup label="${rot}">`+arr.map(n=>`<option value="${esc(n)}">${esc(n)}</option>`).join('')+'</optgroup>':'';
+  // Valor antigo que não consta mais no cadastro segue selecionável: sem isso,
+  // editar uma movimentação antiga apagaria origem/destino em silêncio.
+  const extra=(atual&&!cts.includes(atual)&&!locs.includes(atual))
+    ? `<optgroup label="Registrado anteriormente"><option value="${esc(atual)}">${esc(atual)}</option></optgroup>` : '';
+  return '<option value="">— Selecione —</option>'+grupo('Contratos',cts)+grupo('Localidades',locs)+extra;
+}
+function _preencherLocais(origem='',destino=''){
+  const o=document.getElementById('mmov-origem'), d=document.getElementById('mmov-destino');
+  if(o){o.innerHTML=_opcoesLocais(origem); o.value=origem||'';}
+  if(d){d.innerHTML=_opcoesLocais(destino); d.value=destino||'';}
+}
+
 export function abrirMMov(vidPresel){
   _emov=null;
   document.getElementById('mmov-t').textContent='🔄 Nova Movimentação';
   const _btnSalvar=document.getElementById('mmov-btn-salvar');
   if(_btnSalvar) _btnSalvar.textContent='💾 Registrar Movimentação';
-  ['mmov-origem','mmov-destino','mmov-obs','mmov-resp'].forEach(id=>document.getElementById(id).value='');
+  ['mmov-obs','mmov-resp'].forEach(id=>document.getElementById(id).value='');
+  _preencherLocais();
   document.getElementById('mmov-data').value=now();
   document.getElementById('mmov-km').value='';
   document.getElementById('mmov-v').value='';
   document.getElementById('mmov-placa-busca').value='';
   document.getElementById('mmov-v-info').style.display='none';
   document.getElementById('mmov-sugestoes').style.display='none';
-  document.getElementById('mmov-ct-box').style.display='none';
   const ctSel=document.getElementById('mmov-novo-ct');
-  ctSel.innerHTML='<option value="">— Manter contrato atual —</option>';
-  C.ct.forEach(c=>{ctSel.innerHTML+=`<option value="${c.id}">${c.nome_contrato}</option>`;});
+  ctSel.innerHTML='<option value="">— Manter contrato atual —</option>'
+    +C.ct.filter(c=>c.status==='ativo').map(c=>`<option value="${c.id}">${esc(c.nome_contrato)}</option>`).join('');
+  ctSel.value='';
   document.getElementById('mmov-resp').value=SESSION?.nome||'';
   if(vidPresel){
     const v=C.v.find(x=>x.id==vidPresel);
@@ -75,9 +96,13 @@ export function abrirMMov(vidPresel){
       document.getElementById('mmov-vi-modelo').textContent=v.modelo;
       document.getElementById('mmov-vi-st').textContent=v.status;
       document.getElementById('mmov-v-info').style.display='block';
-      document.getElementById('mmov-origem').value=window.gCT(v.contrato_id).nome_contrato||'';
+      _preencherLocais(window.gCT(v.contrato_id).nome_contrato||'','');
     }
   }
+  // O box "Atualizar contrato do veículo" depende do tipo, e o modal já abre em
+  // "Transferência". Sem esta chamada ele nascia oculto e só aparecia se a
+  // pessoa trocasse o tipo e voltasse.
+  onMmovTipo();
   window.oMo('mo-mov');
 }
 
@@ -96,8 +121,7 @@ export function editMov(id){
   document.getElementById('mmov-sugestoes').style.display='none';
   document.getElementById('mmov-data').value=(_emov.data_movimentacao||'').slice(0,10);
   document.getElementById('mmov-tipo').value=_emov.tipo_movimentacao||'Entrada';
-  document.getElementById('mmov-origem').value=_emov.origem||'';
-  document.getElementById('mmov-destino').value=_emov.destino||'';
+  _preencherLocais(_emov.origem||'',_emov.destino||'');
   document.getElementById('mmov-km').value=_emov.km||'';
   document.getElementById('mmov-obs').value=_emov.observacao||'';
   document.getElementById('mmov-resp').value=_emov.usuario_responsavel||'';
