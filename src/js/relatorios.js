@@ -13,12 +13,42 @@ export const RELS=[
   {id:'status',     icon:'📊', title:'Status de Veículos',     desc:'Veículos por status: vendidos, disp. para venda e mais'},
 ];
 
+// Centros agrupados pela sua localidade, para o filtro ficar navegável com 86
+// opções. Respeita o contrato já escolhido, quando houver.
+function _optsCC(ctId){
+  const ccs=C.cc.filter(c=>c.status==='ativo'&&(!ctId||String(c.contrato_id)===String(ctId)));
+  const porLoc=new Map();
+  ccs.forEach(c=>{
+    const nome=gLoc(c.localidade_id).nome_localidade||'(sem localidade)';
+    if(!porLoc.has(nome)) porLoc.set(nome,[]);
+    porLoc.get(nome).push(c);
+  });
+  return [...porLoc.entries()].sort((a,b)=>a[0].localeCompare(b[0]))
+    .map(([nome,arr])=>`<optgroup label="${nome}">`
+      +arr.sort((x,y)=>(x.nome||'').localeCompare(y.nome||''))
+          .map(c=>`<option value="${c.id}">${c.nome}</option>`).join('')
+      +'</optgroup>').join('');
+}
+function _fillCC(el,ctId){
+  if(!el)return;
+  const v=el.value;
+  el.innerHTML='<option value="">Todos os centros</option>'+_optsCC(ctId);
+  el.value=v;
+  if(el.value!==v) el.value=''; // centro fora do contrato escolhido: limpa
+}
+
+// Trocar o contrato reduz a lista de centros ao contrato escolhido.
+export function atualizarCCrel(){
+  _fillCC(document.getElementById('rel-cc'),document.getElementById('rel-ct')?.value);
+}
+
 export function getFiltrosRel(){
   return{
     di:document.getElementById('rel-di')?.value||'',
     df:document.getElementById('rel-df')?.value||'',
     ct:document.getElementById('rel-ct')?.value||'',
     loc:document.getElementById('rel-loc')?.value||'',
+    cc:document.getElementById('rel-cc')?.value||'',
     frota:document.getElementById('rel-frota')?.value||'',
     statusV:document.getElementById('rel-status-v')?.value||'',
     exec_di:document.getElementById('rel-exec-di')?.value||'',
@@ -39,6 +69,9 @@ export function filtrarDados(tipo){
   let veics=C.v;
   if(f.ct) veics=veics.filter(v=>String(v.contrato_id)===String(f.ct));
   if(f.loc) veics=veics.filter(v=>String(v.localidade_id)===String(f.loc));
+  // Centro de custo: abastecimentos, manutenções e multas são filtrados pelos
+  // ids de veículo logo abaixo, então todos os relatórios herdam este filtro.
+  if(f.cc)  veics=veics.filter(v=>String(v.centro_custo_id)===String(f.cc));
   const vids=new Set(veics.map(v=>String(v.id)));
 
   let abast=C.a.filter(a=>vids.has(String(a.veiculo_id)));
@@ -77,6 +110,7 @@ export function renderRelCards(){
   const loc=document.getElementById('rel-loc');
   if(ct){const v=ct.value;ct.innerHTML='<option value="">Todos os contratos</option>';C.ct.forEach(x=>{ct.innerHTML+=`<option value="${x.id}">${x.nome_contrato}</option>`;});ct.value=v;}
   if(loc){const v=loc.value;loc.innerHTML='<option value="">Todas as localidades</option>';C.loc.forEach(x=>{loc.innerHTML+=`<option value="${x.id}">${x.nome_localidade}</option>`;});loc.value=v;}
+  _fillCC(document.getElementById('rel-cc'),ct?.value);
   document.getElementById('rel-cards').innerHTML=RELS.map(r=>`
     <div class="rc">
       <div class="rcb"><span class="rci">${r.icon}</span><div class="rct">${r.title}</div><div class="rcd">${r.desc}</div></div>
@@ -240,6 +274,7 @@ export function initGrafFiltros(){
   const loc=document.getElementById('graf-sel-loc');
   if(ct){const v=ct.value;ct.innerHTML='<option value="">Todos os contratos</option>';C.ct.forEach(x=>{ct.innerHTML+=`<option value="${x.id}">${x.nome_contrato}</option>`;});ct.value=v;}
   if(loc){const v=loc.value;loc.innerHTML='<option value="">Todas as localidades</option>';C.loc.forEach(x=>{loc.innerHTML+=`<option value="${x.id}">${x.nome_localidade}</option>`;});loc.value=v;}
+  _fillCC(document.getElementById('graf-sel-cc'),ct?.value);
 }
 
 export function getFiltrosGraf(){
@@ -248,6 +283,7 @@ export function getFiltrosGraf(){
     df:document.getElementById('graf-df')?.value||'',
     ct:document.getElementById('graf-sel-ct')?.value||'',
     loc:document.getElementById('graf-sel-loc')?.value||'',
+    cc:document.getElementById('graf-sel-cc')?.value||'',
     tema:document.getElementById('graf-tema')?.value||'manutencao'
   };
 }
@@ -258,6 +294,9 @@ export function filtrarGraf(){
   let veics=C.v;
   if(f.ct) veics=veics.filter(v=>String(v.contrato_id)===String(f.ct));
   if(f.loc) veics=veics.filter(v=>String(v.localidade_id)===String(f.loc));
+  // Centro de custo: abastecimentos, manutenções e multas são filtrados pelos
+  // ids de veículo logo abaixo, então todos os relatórios herdam este filtro.
+  if(f.cc)  veics=veics.filter(v=>String(v.centro_custo_id)===String(f.cc));
   const vids=new Set(veics.map(v=>String(v.id)));
   let abast=C.a.filter(a=>vids.has(String(a.veiculo_id)));
   let manut=C.m.filter(m=>vids.has(String(m.veiculo_id)));
@@ -487,6 +526,7 @@ export function exportarGraficosExcel(){
 // Make globally accessible
 window.RELS = RELS;
 window.getFiltrosRel = getFiltrosRel;
+window.atualizarCCrel = atualizarCCrel;
 window.filtrarDados = filtrarDados;
 window.renderRelCards = renderRelCards;
 window.limparFiltrosRel = limparFiltrosRel;

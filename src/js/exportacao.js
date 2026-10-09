@@ -85,6 +85,7 @@ export function exportarExcel(tipo){
       let _vAll=[...C.v];
       if(fRel.ct) _vAll=_vAll.filter(v=>String(v.contrato_id)===String(fRel.ct));
       if(fRel.loc) _vAll=_vAll.filter(v=>String(v.localidade_id)===String(fRel.loc));
+      if(fRel.cc)  _vAll=_vAll.filter(v=>String(v.centro_custo_id)===String(fRel.cc));
       const _vids=new Set(_vAll.map(v=>String(v.id)));
       let _mAll=C.m.filter(m=>_vids.has(String(m.veiculo_id)));
       let _aAll=C.a.filter(a=>_vids.has(String(a.veiculo_id)));
