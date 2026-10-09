@@ -95,14 +95,15 @@ export function populateSel(){
 export function populateFiltros(){
   const $=id=>document.getElementById(id);
   _setOpts($('fv-ct'),C.ct,_nomeGen,'Todos contratos');
-  _setOpts($('fv-loc'),C.loc,_nomeGen,'Todas localidades');
+  _setOpts($('fv-loc'),C.loc.filter(x=>x.status==='ativo'),_nomeGen,'Todas localidades');
   _setOpts($('fv-cc'),C.cc,_nomeGen,'Todos centros');
 }
 
 export function onFiltContrato(){
   const ctId=document.getElementById('fv-ct').value;
   const locEl=document.getElementById('fv-loc'),ccEl=document.getElementById('fv-cc');
-  const fl=ctId?C.loc.filter(l=>C.cc.some(c=>c.contrato_id==ctId&&c.localidade_id==l.id)):C.loc;
+  const locAtivas=C.loc.filter(l=>l.status==='ativo');
+  const fl=ctId?locAtivas.filter(l=>C.cc.some(c=>c.contrato_id==ctId&&c.localidade_id==l.id)):locAtivas;
   const fc=ctId?C.cc.filter(c=>c.contrato_id==ctId):C.cc;
   locEl.innerHTML='<option value="">Todas localidades</option>'+fl.map(x=>`<option value="${x.id}">${x.nome_localidade}</option>`).join('');
   ccEl.innerHTML='<option value="">Todos centros</option>'+fc.map(x=>`<option value="${x.id}">${x.nome}</option>`).join('');

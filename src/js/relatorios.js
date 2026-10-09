@@ -109,7 +109,7 @@ export function renderRelCards(){
   const ct=document.getElementById('rel-ct');
   const loc=document.getElementById('rel-loc');
   if(ct){const v=ct.value;ct.innerHTML='<option value="">Todos os contratos</option>';C.ct.forEach(x=>{ct.innerHTML+=`<option value="${x.id}">${x.nome_contrato}</option>`;});ct.value=v;}
-  if(loc){const v=loc.value;loc.innerHTML='<option value="">Todas as localidades</option>';C.loc.forEach(x=>{loc.innerHTML+=`<option value="${x.id}">${x.nome_localidade}</option>`;});loc.value=v;}
+  if(loc){const v=loc.value;loc.innerHTML='<option value="">Todas as localidades</option>';C.loc.filter(x=>x.status==='ativo').forEach(x=>{loc.innerHTML+=`<option value="${x.id}">${x.nome_localidade}</option>`;});loc.value=v;}
   _fillCC(document.getElementById('rel-cc'),ct?.value);
   document.getElementById('rel-cards').innerHTML=RELS.map(r=>`
     <div class="rc">
@@ -273,7 +273,7 @@ export function initGrafFiltros(){
   const ct=document.getElementById('graf-sel-ct');
   const loc=document.getElementById('graf-sel-loc');
   if(ct){const v=ct.value;ct.innerHTML='<option value="">Todos os contratos</option>';C.ct.forEach(x=>{ct.innerHTML+=`<option value="${x.id}">${x.nome_contrato}</option>`;});ct.value=v;}
-  if(loc){const v=loc.value;loc.innerHTML='<option value="">Todas as localidades</option>';C.loc.forEach(x=>{loc.innerHTML+=`<option value="${x.id}">${x.nome_localidade}</option>`;});loc.value=v;}
+  if(loc){const v=loc.value;loc.innerHTML='<option value="">Todas as localidades</option>';C.loc.filter(x=>x.status==='ativo').forEach(x=>{loc.innerHTML+=`<option value="${x.id}">${x.nome_localidade}</option>`;});loc.value=v;}
   _fillCC(document.getElementById('graf-sel-cc'),ct?.value);
 }
 
@@ -432,7 +432,7 @@ export function renderGraficos(){
   }
 
   // 2. Por Localidade — barras horizontais
-  const byLoc=C.loc.map(l=>{
+  const byLoc=C.loc.filter(l=>l.status==='ativo').map(l=>{
     const ids=new Set(veics.filter(v=>String(v.localidade_id)===String(l.id)).map(v=>String(v.id)));
     return{lbl:l.nome_localidade,val:records.filter(r=>ids.has(String(getVid(r)))).reduce((s,r)=>s+getVal(r),0)};
   }).filter(d=>d.val>0).sort((a,b)=>b.val-a.val);
@@ -501,7 +501,7 @@ export function exportarGraficosExcel(){
     const recs=records.filter(r=>ids.has(getVid(r)));
     return[ct.nome_contrato,recs.length,recs.reduce((s,r)=>s+getVal(r),0).toFixed(2)];
   })];
-  const rowsLoc=[['Localidade','Registros','Valor Total (R$)'],...C.loc.map(l=>{
+  const rowsLoc=[['Localidade','Registros','Valor Total (R$)'],...C.loc.filter(l=>l.status==='ativo').map(l=>{
     const ids=new Set(veics.filter(v=>v.localidade_id==l.id).map(v=>v.id));
     const recs=records.filter(r=>ids.has(getVid(r)));
     return[l.nome_localidade,recs.length,recs.reduce((s,r)=>s+getVal(r),0).toFixed(2)];
