@@ -756,7 +756,7 @@
       <div class="fgp"><label>Ano</label><input id="mv-ano" type="number" min="1990" max="2030"></div>
       <div class="fgp"><label>🔴 Contrato *</label><select id="mv-ct" onchange="onMvContrato()"><option value="">— Selecione —</option></select></div>
       <div class="fgp"><label>🔴 Localidade *</label><select id="mv-loc" onchange="onMvLocalidade()"><option value="">— Selecione —</option></select></div>
-      <div class="fgp"><label>🔴 Centro de Custo *</label><select id="mv-cc"><option value="">— Selecione —</option></select></div>
+      <div class="fgp"><label>🔴 Centro de Custo *</label><input id="mv-cc-busca" oninput="buscarCC()" placeholder="🔍 buscar centro ou localidade..." autocomplete="off" style="width:100%;margin-bottom:5px;padding:6px 10px;border:1px solid var(--b2);border-radius:6px;font-size:12px"><select id="mv-cc"><option value="">— Selecione —</option></select></div>
       <div class="fgp"><label>Tipo</label><select id="mv-tipo"><option>MOTO</option><option>CARRO</option><option>CAMINHÃO</option><option>RETROESCAVADEIRA</option><option>PICKUP</option></select></div>
       <div class="fgp"><label>Tipo de Frota *</label>
         <select id="mv-frota" onchange="onMvFrota()" style="background:var(--s1);border:1px solid var(--b2);padding:8px 12px;border-radius:8px;font-size:13px;width:100%">

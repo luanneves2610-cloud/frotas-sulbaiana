@@ -115,20 +115,53 @@ export function onFiltContrato(){
 // O campo centros_custo.localidade_id continua existindo (é o que liga contrato
 // a localidade na aba Localidades e no acesso do usuário não-admin), mas não
 // restringe mais o cadastro do veículo.
-export function preencherCCdoContrato(ccEl,ctId,manter){
+export function preencherCCdoContrato(ccEl,ctId,manter,locId){
   if(!ccEl)return;
-  const atual=manter!=null?String(manter):ccEl.value;
-  const ccs=C.cc.filter(c=>c.contrato_id==ctId&&c.status==='ativo');
-  let html='<option value="">— Selecione —</option>'
-    +ccs.map(c=>`<option value="${c.id}">${esc(c.nome)}</option>`).join('');
-  // Centro já gravado no veículo que não esteja nessa lista (inativo, ou de
-  // outro contrato) continua selecionável, para a edição não apagá-lo em silêncio.
+  const atual = manter!=null ? String(manter) : ccEl.value;
+  const locSel = locId!=null ? String(locId) : (document.getElementById('mv-loc')?.value||'');
+  const busca = (document.getElementById('mv-cc-busca')?.value||'').trim().toLowerCase();
+
+  let ccs=C.cc.filter(c=>c.contrato_id==ctId&&c.status==='ativo');
+  if(busca) ccs=ccs.filter(c=>
+    (c.nome||'').toLowerCase().includes(busca) ||
+    (window.gLoc(c.localidade_id).nome_localidade||'').toLowerCase().includes(busca));
+
+  // Centros da localidade escolhida vêm primeiro: é o caso de 100% dos
+  // veículos hoje, então o mais provável fica a um clique. Os demais ficam
+  // agrupados por localidade, com 📍 marcando que a alocação é cruzada.
+  const daLoc  = locSel ? ccs.filter(c=>String(c.localidade_id)===locSel) : [];
+  const idsLoc = new Set(daLoc.map(c=>c.id));
+  const outros = ccs.filter(c=>!idsLoc.has(c.id));
+
+  const opt=(c,cruzado)=>`<option value="${c.id}">${esc(c.nome)}${cruzado?' 📍':''}</option>`;
+  let html='<option value="">— Selecione —</option>';
+  if(daLoc.length) html+=`<optgroup label="Centros desta localidade">${daLoc.map(c=>opt(c,false)).join('')}</optgroup>`;
+
+  const porLoc=new Map();
+  outros.forEach(c=>{
+    const nome=window.gLoc(c.localidade_id).nome_localidade||'(sem localidade)';
+    if(!porLoc.has(nome)) porLoc.set(nome,[]);
+    porLoc.get(nome).push(c);
+  });
+  [...porLoc.entries()].sort((a,b)=>a[0].localeCompare(b[0])).forEach(([nome,arr])=>{
+    html+=`<optgroup label="📍 ${esc(nome)}">${arr.map(c=>opt(c,true)).join('')}</optgroup>`;
+  });
+
+  // Centro já gravado no veículo que não esteja na lista (inativo, de outro
+  // contrato, ou escondido pela busca) continua selecionável, para a edição
+  // não apagá-lo em silêncio.
   if(atual&&!ccs.some(c=>String(c.id)===atual)){
     const cc=C.cc.find(c=>String(c.id)===atual);
     if(cc) html+=`<optgroup label="Centro atual do veículo"><option value="${cc.id}">${esc(cc.nome)}</option></optgroup>`;
   }
   ccEl.innerHTML=html;
   ccEl.value=atual||'';
+}
+
+// Rebusca a lista mantendo o centro já escolhido (chamada pelo campo de busca).
+export function buscarCC(){
+  const ct=document.getElementById('mv-ct')?.value;
+  preencherCCdoContrato(document.getElementById('mv-cc'),ct);
 }
 
 export function onMvContrato(){
@@ -208,6 +241,7 @@ window.populateSel = populateSel;
 window.populateFiltros = populateFiltros;
 window.onFiltContrato = onFiltContrato;
 window.preencherCCdoContrato = preencherCCdoContrato;
+window.buscarCC = buscarCC;
 window.onMvContrato = onMvContrato;
 window.onMvLocalidade = onMvLocalidade;
 window.onMvStatus = onMvStatus;
