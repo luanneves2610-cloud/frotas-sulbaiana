@@ -123,7 +123,11 @@ export function editV(id){
   const ctEl=document.getElementById('mv-ct');ctEl.innerHTML='<option value="">— Selecione —</option>';
   C.ct.filter(x=>x.status==='ativo').forEach(x=>{ctEl.innerHTML+=`<option value="${x.id}">${x.nome_contrato}</option>`;});
   ctEl.value=_ev.contrato_id;window.onMvContrato();
-  setTimeout(()=>{document.getElementById('mv-loc').value=_ev.localidade_id;window.onMvLocalidade();setTimeout(()=>{document.getElementById('mv-cc').value=_ev.centro_custo_id;},60);},60);
+  // Antes eram dois setTimeout aninhados esperando a cascata; como o centro de
+  // custo não depende mais da localidade, dá para preencher direto — e passar o
+  // centro atual garante que ele apareça mesmo se estiver inativo.
+  document.getElementById('mv-loc').value=_ev.localidade_id||'';
+  window.preencherCCdoContrato(document.getElementById('mv-cc'),_ev.contrato_id,_ev.centro_custo_id||'');
   window.oMo('mo-v');
 }
 

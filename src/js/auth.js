@@ -409,10 +409,16 @@ export async function loadAll() {
 
     // Filtra centros, localidades e contratos pelo contrato do usuário (não-admin)
     const ccFiltro  = !ctFiltro ? cc  : cc.filter(c => parseInt(c.contrato_id) == ctFiltro);
-    const locFiltro = !ctFiltro ? loc : loc.filter(l => ccFiltro.some(c => c.localidade_id == l.id));
+    // Além das localidades ligadas a um centro de custo do contrato, inclui as
+    // localidades onde os veículos do contrato realmente estão. Sem isso, um
+    // veículo alocado em localidade sem centro de custo apareceria com "—".
+    const vCt = !ctFiltro ? v : v.filter(x => parseInt(x.contrato_id) == ctFiltro);
+    const locsDosVeiculos = new Set(vCt.map(x => String(x.localidade_id)));
+    const locFiltro = !ctFiltro ? loc
+      : loc.filter(l => ccFiltro.some(c => c.localidade_id == l.id) || locsDosVeiculos.has(String(l.id)));
     const ctArr     = !ctFiltro ? ct  : ct.filter(x => parseInt(x.id) == ctFiltro);
     setC('ct', ctArr); setC('loc', locFiltro); setC('cc', ccFiltro); setC('u', u);
-    setC('v', (!ctFiltro) ? v : v.filter(x => parseInt(x.contrato_id) == ctFiltro));
+    setC('v', vCt);
     const vids = new Set(C.v.map(x => x.id));
     setC('a', (!ctFiltro) ? a : a.filter(x => vids.has(x.veiculo_id)));
     setC('m', (!ctFiltro) ? m : m.filter(x => vids.has(x.veiculo_id)));

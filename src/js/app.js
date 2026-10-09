@@ -1,5 +1,5 @@
 import { C, SESSION } from './state.js';
-import { now, curMonth, lov } from './utils.js';
+import { now, curMonth, lov, esc } from './utils.js';
 import { sbReq } from './api.js';
 
 export const TITLES={dashboard:'Dashboard',contratos:'Contratos',localidades:'Localidades',centros:'Centros de Custo',veiculos:'Veículos',movimentacao:'🔄 Movimentação de Veículos',checklist:'📋 Check-list de Veículos',abastecimento:'Abastecimento',manutencao:'Manutenção',multas:'🚨 Gestão de Multas',vendas:'💰 Venda de Veículos','imp-veiculos':'📥 Importar Veículos','imp-combustivel':'📥 Importar Combustível',relatorios:'Relatórios',historico:'Histórico',usuarios:'Usuários',notificacoes:'🔔 Notificações'};
@@ -108,20 +108,54 @@ export function onFiltContrato(){
   ccEl.innerHTML='<option value="">Todos centros</option>'+fc.map(x=>`<option value="${x.id}">${x.nome}</option>`).join('');
 }
 
+// Centro de custo deixou de depender da localidade escolhida. Antes a lista só
+// mostrava os centros com o MESMO localidade_id, o que obrigava centro e
+// localidade a andarem casados pelo nome. Agora a lista traz todos os centros
+// ativos do contrato, e qualquer um pode ser alocado em qualquer localidade.
+// O campo centros_custo.localidade_id continua existindo (é o que liga contrato
+// a localidade na aba Localidades e no acesso do usuário não-admin), mas não
+// restringe mais o cadastro do veículo.
+export function preencherCCdoContrato(ccEl,ctId,manter){
+  if(!ccEl)return;
+  const atual=manter!=null?String(manter):ccEl.value;
+  const ccs=C.cc.filter(c=>c.contrato_id==ctId&&c.status==='ativo');
+  let html='<option value="">— Selecione —</option>'
+    +ccs.map(c=>`<option value="${c.id}">${esc(c.nome)}</option>`).join('');
+  // Centro já gravado no veículo que não esteja nessa lista (inativo, ou de
+  // outro contrato) continua selecionável, para a edição não apagá-lo em silêncio.
+  if(atual&&!ccs.some(c=>String(c.id)===atual)){
+    const cc=C.cc.find(c=>String(c.id)===atual);
+    if(cc) html+=`<optgroup label="Centro atual do veículo"><option value="${cc.id}">${esc(cc.nome)}</option></optgroup>`;
+  }
+  ccEl.innerHTML=html;
+  ccEl.value=atual||'';
+}
+
 export function onMvContrato(){
   const ctId=document.getElementById('mv-ct').value;
   const locEl=document.getElementById('mv-loc'),ccEl=document.getElementById('mv-cc');
-  locEl.innerHTML='<option value="">— Selecione —</option>';ccEl.innerHTML='<option value="">— Selecione —</option>';
+  locEl.innerHTML='<option value="">— Selecione —</option>';
+  ccEl.innerHTML='<option value="">— Selecione —</option>';
   if(!ctId)return;
-  const locIds=[...new Set(C.cc.filter(c=>c.contrato_id==ctId&&c.status==='ativo').map(c=>c.localidade_id))];
-  locEl.innerHTML+=C.loc.filter(l=>locIds.includes(l.id)).map(l=>`<option value="${l.id}">${l.nome_localidade}</option>`).join('');
+  // Localidades do contrato primeiro; as demais logo abaixo, porque 25 das 104
+  // não têm centro de custo nenhum e eram inalcançáveis no cadastro de veículo.
+  const doCt=new Set(C.cc.filter(c=>c.contrato_id==ctId&&c.status==='ativo').map(c=>String(c.localidade_id)));
+  const ativas=C.loc.filter(l=>l.status==='ativo');
+  const dentro=ativas.filter(l=>doCt.has(String(l.id)));
+  const fora  =ativas.filter(l=>!doCt.has(String(l.id)));
+  const grupo=(rot,arr)=>arr.length?`<optgroup label="${rot}">`+arr.map(l=>`<option value="${l.id}">${esc(l.nome_localidade)}</option>`).join('')+'</optgroup>':'';
+  locEl.innerHTML+=grupo('Localidades do contrato',dentro)+grupo('Outras localidades',fora);
+  preencherCCdoContrato(ccEl,ctId,'');
 }
 
 export function onMvLocalidade(){
-  const ctId=document.getElementById('mv-ct').value,locId=document.getElementById('mv-loc').value;
-  const ccEl=document.getElementById('mv-cc');ccEl.innerHTML='<option value="">— Selecione —</option>';
-  if(!ctId||!locId)return;
-  ccEl.innerHTML+=C.cc.filter(c=>c.contrato_id==ctId&&c.localidade_id==locId&&c.status==='ativo').map(c=>`<option value="${c.id}">${c.nome}</option>`).join('');
+  // A localidade não filtra mais os centros — só garante que a lista do
+  // contrato esteja carregada, preservando o que já estiver selecionado.
+  const ctId=document.getElementById('mv-ct').value;
+  const ccEl=document.getElementById('mv-cc');
+  if(!ccEl)return;
+  if(!ctId){ccEl.innerHTML='<option value="">— Selecione —</option>';return;}
+  preencherCCdoContrato(ccEl,ctId);
 }
 
 export function onMvStatus(){
@@ -173,6 +207,7 @@ window.toggleTheme = toggleTheme;
 window.populateSel = populateSel;
 window.populateFiltros = populateFiltros;
 window.onFiltContrato = onFiltContrato;
+window.preencherCCdoContrato = preencherCCdoContrato;
 window.onMvContrato = onMvContrato;
 window.onMvLocalidade = onMvLocalidade;
 window.onMvStatus = onMvStatus;
