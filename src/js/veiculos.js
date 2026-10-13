@@ -70,7 +70,7 @@ export function onMvFrota(){
 
 export function abrirMV(){
   _ev=null;document.getElementById('mv-t').textContent='🚗 Novo Veículo';
-  ['mv-placa','mv-modelo','mv-cor','mv-renavan','mv-resp','mv-obs','mv-med-nome','mv-med-local','mv-loc-nome','mv-loc-email','mv-loc-fone','mv-valor-locacao'].forEach(id=>document.getElementById(id).value='');
+  ['mv-placa','mv-modelo','mv-cor','mv-renavan','mv-resp','mv-obs','mv-med-nome','mv-med-local','mv-loc-nome','mv-loc-email','mv-loc-fone','mv-valor-locacao','mv-cc-busca'].forEach(id=>document.getElementById(id).value='');
   document.getElementById('mv-frota').value='propria';
   document.getElementById('mv-locador-box').style.display='none';
   document.getElementById('mv-locacao-valor-box').style.display='none';
@@ -126,6 +126,7 @@ export function editV(id){
   // Antes eram dois setTimeout aninhados esperando a cascata; como o centro de
   // custo não depende mais da localidade, dá para preencher direto — e passar o
   // centro atual garante que ele apareça mesmo se estiver inativo.
+  const buscaCC=document.getElementById('mv-cc-busca'); if(buscaCC) buscaCC.value='';
   document.getElementById('mv-loc').value=_ev.localidade_id||'';
   window.preencherCCdoContrato(document.getElementById('mv-cc'),_ev.contrato_id,_ev.centro_custo_id||'');
   window.oMo('mo-v');

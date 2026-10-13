@@ -539,8 +539,9 @@
             <div class="pb"><div class="fg fg2" style="gap:12px">
               <div class="fgp"><label>Período — Início</label><input type="date" min="2020-01-01" max="2035-12-31" id="rel-di"></div>
               <div class="fgp"><label>Período — Fim</label><input type="date" min="2020-01-01" max="2035-12-31" id="rel-df"></div>
-              <div class="fgp"><label>Contrato</label><select id="rel-ct"><option value="">Todos os contratos</option></select></div>
+              <div class="fgp"><label>Contrato</label><select id="rel-ct" onchange="atualizarCCrel()"><option value="">Todos os contratos</option></select></div>
               <div class="fgp"><label>Localidade</label><select id="rel-loc"><option value="">Todas as localidades</option></select></div>
+              <div class="fgp"><label>Centro de Custo</label><select id="rel-cc"><option value="">Todos os centros</option></select></div>
               <div class="fgp"><label>Tipo de Frota</label><select id="rel-frota" style="background:var(--s1);border:1px solid var(--b2);padding:8px 12px;border-radius:8px;font-size:13px"><option value="">Todas</option><option value="propria">🏢 Frota Própria</option><option value="locada">🔑 Veículo Locado</option></select></div>
               <div class="fgp"><label>Status do Veículo</label><select id="rel-status-v" style="background:var(--s1);border:1px solid var(--b2);padding:8px 12px;border-radius:8px;font-size:13px"><option value="">Todos</option><option value="ativo">Ativo</option><option value="manutenção">Manutenção</option><option value="inativo">Inativo</option><option value="devolvido">Devolvido</option><option value="disp. para venda">Disp. para Venda</option><option value="vendido">Vendido</option></select></div>
               <div class="fgp"><label>🔧 Exec. — De</label><input type="date" min="2020-01-01" max="2035-12-31" id="rel-exec-di"></div>
@@ -569,6 +570,7 @@
               <div class="fgp"><label>Período — Fim</label><input type="date" min="2020-01-01" max="2035-12-31" id="graf-df"></div>
               <div class="fgp"><label>Contrato</label><select id="graf-sel-ct" onchange="renderGraficos()"><option value="">Todos os contratos</option></select></div>
               <div class="fgp"><label>Localidade</label><select id="graf-sel-loc" onchange="renderGraficos()"><option value="">Todas as localidades</option></select></div>
+              <div class="fgp"><label>Centro de Custo</label><select id="graf-sel-cc" onchange="renderGraficos()"><option value="">Todos os centros</option></select></div>
               <div class="fgp"><label>Tema</label>
                 <select id="graf-tema" onchange="renderGraficos()" style="background:var(--s1);border:1px solid var(--b2);padding:7px 11px;font-size:13px">
                   <option value="manutencao">🔧 Manutenção</option>
@@ -756,7 +758,7 @@
       <div class="fgp"><label>Ano</label><input id="mv-ano" type="number" min="1990" max="2030"></div>
       <div class="fgp"><label>🔴 Contrato *</label><select id="mv-ct" onchange="onMvContrato()"><option value="">— Selecione —</option></select></div>
       <div class="fgp"><label>🔴 Localidade *</label><select id="mv-loc" onchange="onMvLocalidade()"><option value="">— Selecione —</option></select></div>
-      <div class="fgp"><label>🔴 Centro de Custo *</label><select id="mv-cc"><option value="">— Selecione —</option></select></div>
+      <div class="fgp"><label>🔴 Centro de Custo *</label><input id="mv-cc-busca" oninput="buscarCC()" placeholder="🔍 buscar centro ou localidade..." autocomplete="off" style="width:100%;margin-bottom:5px;padding:6px 10px;border:1px solid var(--b2);border-radius:6px;font-size:12px"><select id="mv-cc"><option value="">— Selecione —</option></select></div>
       <div class="fgp"><label>Tipo</label><select id="mv-tipo"><option>MOTO</option><option>CARRO</option><option>CAMINHÃO</option><option>RETROESCAVADEIRA</option><option>PICKUP</option></select></div>
       <div class="fgp"><label>Tipo de Frota *</label>
         <select id="mv-frota" onchange="onMvFrota()" style="background:var(--s1);border:1px solid var(--b2);padding:8px 12px;border-radius:8px;font-size:13px;width:100%">
