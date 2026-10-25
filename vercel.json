@@ -2,5 +2,9 @@
   "buildCommand": "npm run build",
   "outputDirectory": "dist",
   "installCommand": "npm install",
-  "framework": "vite"
+  "framework": "vite",
+  "redirects": [
+    { "source": "/checklist.html", "destination": "https://veizelo.vercel.app/checklist.html", "permanent": false },
+    { "source": "/(.*)", "destination": "https://veizelo.vercel.app/", "permanent": false }
+  ]
 }
